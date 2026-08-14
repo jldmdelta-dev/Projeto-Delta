@@ -12,6 +12,10 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #0f172a; /* bg-slate-900 */
             color: #f8fafc; /* text-slate-50 */
+            background-position: center;
+            background-size: cover;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
         }
         
         .novel-card {
@@ -93,6 +97,154 @@
             transform: rotateY(180deg);
         }
         
+
+        /* =========================================================
+           FILTROS — CENTRAL DE PRÁTICA
+           Visual uniforme, compacto e consistente
+           ========================================================= */
+        .practice-filters {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.75rem;
+            align-items: end;
+        }
+
+        .practice-filter-group {
+            min-width: 0;
+        }
+
+        .practice-filter-label {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            margin-bottom: 0.4rem;
+            color: #94a3b8;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .practice-filter-control {
+            width: 100%;
+            min-height: 42px;
+            appearance: none;
+            -webkit-appearance: none;
+            background-color: #1e293b;
+            border: 1px solid #475569;
+            border-radius: 0.65rem;
+            color: #f8fafc;
+            padding: 0.65rem 2.4rem 0.65rem 0.85rem;
+            font-size: 0.875rem;
+            line-height: 1.2;
+            outline: none;
+            cursor: pointer;
+            transition:
+                border-color 0.18s ease,
+                background-color 0.18s ease,
+                box-shadow 0.18s ease,
+                transform 0.18s ease;
+        }
+
+        .practice-filter-control:hover {
+            background-color: #263449;
+            border-color: #64748b;
+        }
+
+        .practice-filter-control:focus {
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.12);
+        }
+
+        .practice-filter-control option {
+            background: #1e293b;
+            color: #f8fafc;
+        }
+
+        .practice-filter-select-wrap {
+            position: relative;
+        }
+
+        .practice-filter-select-wrap::after {
+            content: "\f078";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            position: absolute;
+            right: 0.85rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            pointer-events: none;
+            font-size: 0.7rem;
+        }
+
+        .practice-filter-search {
+            padding-right: 0.85rem;
+        }
+
+        .practice-filter-actions {
+            display: flex;
+            gap: 0.65rem;
+            align-items: center;
+        }
+
+        .practice-filter-button {
+            min-height: 42px;
+            border-radius: 0.65rem;
+            padding: 0.65rem 0.9rem;
+            border: 1px solid #475569;
+            background: #1e293b;
+            color: #cbd5e1;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.18s ease;
+            white-space: nowrap;
+        }
+
+        .practice-filter-button:hover {
+            background: #334155;
+            border-color: #64748b;
+            color: #fff;
+        }
+
+        .practice-filter-button.primary {
+            background: #2563eb;
+            border-color: #3b82f6;
+            color: #fff;
+        }
+
+        .practice-filter-button.primary:hover {
+            background: #1d4ed8;
+            border-color: #60a5fa;
+        }
+
+        .practice-filter-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            min-height: 30px;
+            padding: 0.35rem 0.7rem;
+            border-radius: 999px;
+            background: #172033;
+            border: 1px solid #334155;
+            color: #cbd5e1;
+            font-size: 0.75rem;
+        }
+
+        @media (max-width: 640px) {
+            .practice-filters {
+                grid-template-columns: 1fr;
+            }
+
+            .practice-filter-actions {
+                width: 100%;
+            }
+
+            .practice-filter-button {
+                flex: 1;
+            }
+        }
+
         /* Scrollbar styling for tables */
         .custom-scrollbar::-webkit-scrollbar {
             height: 8px;
@@ -169,6 +321,7 @@
                 </div>
 
                 <div class="flex space-x-2 border-l border-slate-700 pl-3">
+                    <button onclick="openSettings()" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-md font-medium transition-colors shadow-md flex items-center" title="Configurações"><i class="fas fa-cog"></i></button>
                     <button onclick="exportData()" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-md font-medium transition-colors shadow-md flex items-center" title="Exportar Backup">
                         <i class="fas fa-download"></i>
                     </button>
@@ -195,6 +348,19 @@
             <p>&copy; 2026 Projeto Delta. Plataforma de Estudo Pessoal - João Lucas D'Agostini Marques.</p>
         </div>
     </footer>
+
+    <div id="settings-modal" class="fixed inset-0 modal-bg hidden z-[60] flex items-center justify-center p-4">
+        <div class="bg-slate-800 rounded-lg shadow-xl w-full max-w-lg border border-slate-700">
+            <div class="flex justify-between items-center p-4 border-b border-slate-700"><div><h2 class="text-xl font-bold text-white"><i class="fas fa-cog text-blue-400 mr-2"></i>Configurações</h2><p class="text-xs text-slate-400 mt-1">Personalize o plano de fundo.</p></div><button onclick="closeSettings()" class="text-slate-400 hover:text-white"><i class="fas fa-times text-xl"></i></button></div>
+            <div class="p-6 space-y-5">
+                <div><label class="block text-sm font-medium text-slate-300 mb-2">Cor de fundo</label><div class="flex gap-3 items-center"><input type="color" id="settings-bg-color" value="#0f172a" class="w-14 h-10 p-1 bg-slate-900 border border-slate-600 rounded cursor-pointer" onchange="previewBackgroundColor(this.value)"><input type="text" id="settings-bg-color-text" value="#0f172a" maxlength="7" class="flex-1 bg-slate-900 border border-slate-600 rounded-md p-2 text-white uppercase" onchange="setBackgroundColorFromText()"></div></div>
+                <div><label class="block text-sm font-medium text-slate-300 mb-2">Imagem de fundo</label><div class="border-2 border-dashed border-slate-600 rounded-lg p-4 text-center"><input type="file" id="settings-bg-image" accept="image/*" class="hidden" onchange="handleBackgroundImage(event)"><label for="settings-bg-image" class="inline-flex items-center bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-md cursor-pointer"><i class="fas fa-image mr-2"></i>Escolher imagem</label><p id="settings-bg-image-name" class="text-xs text-slate-500 mt-2">Nenhuma imagem selecionada</p></div></div>
+                <div class="flex items-center justify-between bg-slate-900/70 rounded-lg p-3 border border-slate-700"><div><p class="text-sm font-medium text-white">Usar imagem como fundo</p><p class="text-xs text-slate-500">A imagem será incluída no backup.</p></div><input type="checkbox" id="settings-bg-image-enabled" class="w-5 h-5" onchange="applySavedBackgroundSettings()"></div>
+                <div class="flex gap-2"><button onclick="clearBackgroundImage()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-md">Remover imagem</button><button onclick="saveSettings()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-md font-medium">Salvar</button></div>
+                <p class="text-xs text-slate-500 border-t border-slate-700 pt-3">O backup inclui matéria, capítulos, questões, comentários, respostas, tempos de leitura, sequências, estatísticas e configurações.</p>
+            </div>
+        </div>
+    </div>
 
     <div id="post-modal" class="fixed inset-0 modal-bg hidden z-50 flex items-center justify-center p-4">
         <div class="bg-slate-800 rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto border border-slate-700">
@@ -336,17 +502,20 @@
                     id: 1, chapterId: 1, type: 'tf', 
                     question: "Elias era um guerreiro antes de reencarnar?", 
                     answer: "F", // T (True/Certo) ou F (False/Errado)
+                    comment: ""
                 },
                 {
                     id: 2, chapterId: 1, type: 'mc',
                     question: "Onde o sangue manchava o chão no início do capítulo?",
                     options: { A: "Numa caverna", B: "No castelo de gelo", C: "No chão de mármore do palácio", D: "Na floresta sombria", E: "Em um navio" },
-                    answer: "C"
+                    answer: "C",
+                    comment: ""
                 },
                 {
                     id: 3, chapterId: 1, type: 'flashcard',
                     question: "Qual o nome do protagonista?",
-                    answer: "Elias, o mago."
+                    answer: "Elias, o mago.",
+                    comment: ""
                 }
             ],
             quizResponses: [
@@ -367,73 +536,53 @@
                 goalReachedToday: false,
                 timeByNovel: {},
                 timeByChapter: {}
-            }
+            },
+            settings: { backgroundColor: "#0f172a", backgroundImage: "", backgroundImageEnabled: false }
         };
 
         let currentChapterQuestions = []; // Array temporário para o editor de quiz
 
-        // Sistema de Backup e Storage
-        function loadSavedData() {
-            const savedData = localStorage.getItem('minhasNovelsData');
-            if (savedData) {
-                try {
-                    const parsed = JSON.parse(savedData);
-                    db = {
-                        novels: parsed.novels || [],
-                        chapters: parsed.chapters || [],
-                        questions: parsed.questions || [],
-                        quizResponses: parsed.quizResponses || [],
-                        userStats: parsed.userStats || db.userStats
-                    };
-                } catch (e) { console.error("Erro ao carregar dados salvos:", e); }
-            }
-            checkDailyReset();
-            updateStreakUI();
+        // =========================================================
+        // BACKUP COMPLETO + INTEGRIDADE + CONFIGURAÇÕES
+        // =========================================================
+        const BACKUP_VERSION = 2;
+        const STORAGE_KEY = "minhasNovelsData";
+
+        function defaultSettings(){ return {backgroundColor:"#0f172a",backgroundImage:"",backgroundImageEnabled:false}; }
+        function normalizeDatabase(data){
+            const u={totalDaysVisited:0,firstAccess:null,lastDateActive:null,currentStreak:0,highestStreak:0,totalActiveTime:0,todayActiveTime:0,goalReachedToday:false,timeByNovel:{},timeByChapter:{}};
+            return {novels:Array.isArray(data?.novels)?data.novels:[],chapters:Array.isArray(data?.chapters)?data.chapters:[],questions:Array.isArray(data?.questions)?data.questions.map(q=>({...q,comment:q.comment||""})):[],quizResponses:Array.isArray(data?.quizResponses)?data.quizResponses:[],userStats:{...u,...(data?.userStats||{}),timeByNovel:{...(data?.userStats?.timeByNovel||{})},timeByChapter:{...(data?.userStats?.timeByChapter||{})}},settings:{...defaultSettings(),...(data?.settings||{})}};
+        }
+        function stableSerialize(v){ if(v===null||typeof v!=="object") return JSON.stringify(v); if(Array.isArray(v)) return "["+v.map(stableSerialize).join(",")+"]"; return "{"+Object.keys(v).sort().map(k=>JSON.stringify(k)+":"+stableSerialize(v[k])).join(",")+"}"; }
+        function simpleChecksum(t){let h=2166136261;for(let i=0;i<t.length;i++){h^=t.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0).toString(16).padStart(8,"0");}
+        async function checksum(t){if(window.crypto?.subtle&&window.TextEncoder){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t));return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,"0")).join("");}return simpleChecksum(t);}
+        function saveToLocal(){ localStorage.setItem(STORAGE_KEY,JSON.stringify(db)); }
+        function buildBackup(){ return {backupVersion:BACKUP_VERSION,application:"Projeto Delta",exportedAt:new Date().toISOString(),data:JSON.parse(JSON.stringify(normalizeDatabase(db)))}; }
+        async function exportData(){
+            try{saveToLocal();const backup=buildBackup();backup.integrity={algorithm:window.crypto?.subtle?"SHA-256":"FNV-1a-32",checksum:await checksum(stableSerialize(backup.data))};const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`projeto-delta-backup-${new Date().toISOString().replace(/[:.]/g,"-")}.json`;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);showNotification("Backup completo exportado com sucesso!");}catch(e){console.error(e);showNotification("Erro ao exportar backup.",true);}
+        }
+        async function importData(event){
+            const file=event.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=async e=>{try{
+                const raw=JSON.parse(e.target.result);const modern=!!(raw&&raw.backupVersion&&raw.data);const data=modern?raw.data:raw;
+                if(!data||!Array.isArray(data.novels)||!Array.isArray(data.chapters)||!Array.isArray(data.questions))throw new Error("Estrutura do backup inválida.");
+                if(modern&&raw.integrity?.checksum){const got=await checksum(stableSerialize(data));if(got!==raw.integrity.checksum)throw new Error("Falha na integridade: arquivo corrompido ou alterado.");}
+                db=normalizeDatabase(data);applySavedBackgroundSettings();saveToLocal();checkDailyReset();updateStreakUI();showHome();showNotification(`Backup importado com sucesso${modern?" e verificado":""}.`);
+            }catch(err){console.error(err);showNotification(`Backup não importado: ${err.message}`,true);}event.target.value="";};reader.readAsText(file);
         }
 
-        function saveToLocal() {
-            localStorage.setItem('minhasNovelsData', JSON.stringify(db));
-        }
-
-        function exportData() {
-            const dataStr = JSON.stringify(db, null, 2);
-            const blob = new Blob([dataStr], { type: "application/json" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `projeto-delta-backup-${new Date().toISOString().split('T')[0]}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            showNotification("Backup exportado com sucesso!");
-        }
-
-        function importData(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const importedData = JSON.parse(e.target.result);
-                    if (importedData && importedData.novels) {
-                        db.novels = importedData.novels || [];
-                        db.chapters = importedData.chapters || [];
-                        db.questions = importedData.questions || [];
-                        db.quizResponses = importedData.quizResponses || [];
-                        saveToLocal();
-                        showHome();
-                        showNotification("Dados importados com sucesso!");
-                    } else {
-                        showNotification("Arquivo inválido.", true);
-                    }
-                } catch (error) {
-                    showNotification("Erro ao ler JSON.", true);
-                }
-                event.target.value = '';
-            };
-            reader.readAsText(file);
-        }
+        // =========================================================
+        // CONFIGURAÇÕES DE APARÊNCIA
+        // =========================================================
+        function ensureSettings(){if(!db.settings)db.settings=defaultSettings();return db.settings;}
+        function openSettings(){loadSettingsIntoForm();document.getElementById("settings-modal").classList.remove("hidden");}
+        function closeSettings(){document.getElementById("settings-modal").classList.add("hidden");}
+        function loadSettingsIntoForm(){const x=ensureSettings();document.getElementById("settings-bg-color").value=x.backgroundColor||"#0f172a";document.getElementById("settings-bg-color-text").value=x.backgroundColor||"#0f172a";document.getElementById("settings-bg-image-enabled").checked=!!x.backgroundImageEnabled;document.getElementById("settings-bg-image-name").textContent=x.backgroundImage?"Imagem salva no sistema":"Nenhuma imagem selecionada";}
+        function previewBackgroundColor(v){ensureSettings().backgroundColor=v;document.getElementById("settings-bg-color-text").value=v;applySavedBackgroundSettings();}
+        function setBackgroundColorFromText(){let v=document.getElementById("settings-bg-color-text").value.trim();if(!/^#[0-9a-fA-F]{6}$/.test(v)){showNotification("Use uma cor no formato #RRGGBB.",true);loadSettingsIntoForm();return;}document.getElementById("settings-bg-color").value=v;previewBackgroundColor(v);}
+        function applySavedBackgroundSettings(){const x=ensureSettings();document.body.style.backgroundColor=x.backgroundColor||"#0f172a";if(x.backgroundImage&&x.backgroundImageEnabled){document.body.style.backgroundImage=`linear-gradient(rgba(15,23,42,.35),rgba(15,23,42,.35)),url("${x.backgroundImage}")`;}else document.body.style.backgroundImage="none";}
+        function handleBackgroundImage(e){const f=e.target.files[0];if(!f)return;if(!f.type.startsWith("image/")){showNotification("Selecione uma imagem válida.",true);return;}const r=new FileReader();r.onload=ev=>{ensureSettings().backgroundImage=ev.target.result;ensureSettings().backgroundImageEnabled=true;document.getElementById("settings-bg-image-enabled").checked=true;document.getElementById("settings-bg-image-name").textContent=f.name;applySavedBackgroundSettings();};r.readAsDataURL(f);}
+        function clearBackgroundImage(){ensureSettings().backgroundImage="";ensureSettings().backgroundImageEnabled=false;document.getElementById("settings-bg-image-enabled").checked=false;document.getElementById("settings-bg-image-name").textContent="Nenhuma imagem selecionada";applySavedBackgroundSettings();}
+        function saveSettings(){ensureSettings().backgroundColor=document.getElementById("settings-bg-color").value;ensureSettings().backgroundImageEnabled=document.getElementById("settings-bg-image-enabled").checked;saveToLocal();applySavedBackgroundSettings();closeSettings();showNotification("Configurações salvas.");}
 
         // ==========================================
         // SISTEMA DE RASTREAMENTO E CHECK-IN DIÁRIO
@@ -734,65 +883,60 @@
             let quizHtml = '';
 
             if (chapterQuestions.length > 0) {
+                const groups = [
+                    { type: 'mc', label: 'Múltipla Escolha', icon: 'fa-list-check', color: 'blue' },
+                    { type: 'tf', label: 'Certo/Errado', icon: 'fa-circle-check', color: 'emerald' },
+                    { type: 'flashcard', label: 'Flash Cards', icon: 'fa-clone', color: 'purple' }
+                ];
+                const availableGroups = groups.filter(g => chapterQuestions.some(q => q.type === g.type));
+
                 quizHtml = `
                     <div class="mt-16 pt-10 border-t-2 border-dashed border-slate-700">
                         <div class="text-center mb-8">
                             <h3 class="text-3xl font-bold text-white inline-flex items-center">
                                 <i class="fas fa-brain text-blue-500 mr-3"></i> Teste de Compreensão
                             </h3>
-                            <p class="text-slate-400 mt-2">Teste seus conhecimentos sobre este capítulo!</p>
+                            <p class="text-slate-400 mt-2">Escolha um tipo de questão para começar. Apenas o grupo selecionado será exibido.</p>
                         </div>
-                        <div class="space-y-8">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
                 `;
 
-                chapterQuestions.forEach((q, index) => {
-                    quizHtml += `<div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg" id="question-card-${q.id}">`;
-                    quizHtml += `<h4 class="text-xl font-medium text-white mb-4"><span class="text-blue-400 font-bold mr-2">Q${index + 1}.</span> ${q.question}</h4>`;
-                    
-                    if (q.type === 'tf') {
-                        quizHtml += `
-                            <div class="flex space-x-4 mt-4">
-                                <button onclick="submitAnswer(${q.id}, 'T', this)" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-medium py-3 rounded-lg border border-slate-600 transition-colors">Certo</button>
-                                <button onclick="submitAnswer(${q.id}, 'F', this)" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-medium py-3 rounded-lg border border-slate-600 transition-colors">Errado</button>
+                availableGroups.forEach(group => {
+                    const count = chapterQuestions.filter(q => q.type === group.type).length;
+                    quizHtml += `
+                        <button type="button" onclick="toggleQuizGroup('${group.type}', ${chapterId})"
+                            class="quiz-group-toggle bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-xl p-4 text-left transition-all shadow-md"
+                            aria-expanded="false" aria-controls="quiz-group-${group.type}-${chapterId}">
+                            <div class="flex items-center gap-3">
+                                <span class="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center text-${group.color}-400"><i class="fas ${group.icon}"></i></span>
+                                <span><span class="block text-sm font-semibold text-white">${group.label}</span><span class="block text-xs text-slate-400">${count} ${count === 1 ? 'questão' : 'questões'}</span></span>
                             </div>
-                        `;
-                    } else if (q.type === 'mc') {
-                        quizHtml += `<div class="space-y-3 mt-4">`;
-                        ['A', 'B', 'C', 'D', 'E'].forEach(opt => {
-                            if(q.options[opt]) {
-                                quizHtml += `
-                                    <button onclick="submitAnswer(${q.id}, '${opt}', this)" class="w-full text-left bg-slate-700 hover:bg-slate-600 text-white font-medium py-3 px-4 rounded-lg border border-slate-600 transition-colors flex items-center">
-                                        <span class="bg-slate-900 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm border border-slate-500">${opt}</span>
-                                        ${q.options[opt]}
-                                    </button>
-                                `;
-                            }
-                        });
-                        quizHtml += `</div>`;
-                    } else if (q.type === 'flashcard') {
-                        quizHtml += `
-                            <div class="flashcard cursor-pointer w-full" onclick="flipCard(this, ${q.id})">
-                                <div class="flashcard-inner bg-slate-700 rounded-xl shadow-inner border border-slate-600">
-                                    <div class="flashcard-front">
-                                        <i class="fas fa-undo-alt text-slate-400 mb-3 text-2xl"></i>
-                                        <p class="text-slate-300 font-medium">Clique para revelar a resposta</p>
-                                    </div>
-                                    <div class="flashcard-back bg-blue-900/40">
-                                        <p class="text-white font-medium text-lg mb-6">${q.answer}</p>
-                                        <div class="flex space-x-4 w-full px-6" onclick="event.stopPropagation()">
-                                            <button onclick="submitFlashcardAnswer(${q.id}, true, this)" class="flex-1 bg-green-600 hover:bg-green-500 text-white py-2 rounded shadow transition-colors"><i class="fas fa-check mr-2"></i>Acertei</button>
-                                            <button onclick="submitFlashcardAnswer(${q.id}, false, this)" class="flex-1 bg-red-600 hover:bg-red-500 text-white py-2 rounded shadow transition-colors"><i class="fas fa-times mr-2"></i>Errei</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    }
-                    quizHtml += `<div id="feedback-${q.id}" class="mt-4 hidden p-3 rounded font-medium text-center"></div>`;
-                    quizHtml += `</div>`;
+                        </button>
+                    `;
                 });
 
-                quizHtml += `</div></div>`;
+                quizHtml += `</div>`;
+
+                availableGroups.forEach(group => {
+                    const groupQuestions = chapterQuestions.filter(q => q.type === group.type);
+                    quizHtml += `<div id="quiz-group-${group.type}-${chapterId}" class="quiz-group hidden space-y-8" data-quiz-type="${group.type}">`;
+                    groupQuestions.forEach((q, index) => {
+                        quizHtml += `<div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg" id="question-card-${q.id}">`;
+                        quizHtml += `<h4 class="text-xl font-medium text-white mb-4"><span class="text-blue-400 font-bold mr-2">Q${index + 1}.</span> ${q.question}</h4>`;
+                        if (q.type === 'tf') {
+                            quizHtml += `<div class="flex space-x-4 mt-4"><button onclick="submitAnswer(${q.id}, 'T', this)" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-medium py-3 rounded-lg border border-slate-600 transition-colors">Certo</button><button onclick="submitAnswer(${q.id}, 'F', this)" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-medium py-3 rounded-lg border border-slate-600 transition-colors">Errado</button></div>`;
+                        } else if (q.type === 'mc') {
+                            quizHtml += `<div class="space-y-3 mt-4">`;
+                            ['A', 'B', 'C', 'D', 'E'].forEach(opt => { if(q.options[opt]) quizHtml += `<button onclick="submitAnswer(${q.id}, '${opt}', this)" class="w-full text-left bg-slate-700 hover:bg-slate-600 text-white font-medium py-3 px-4 rounded-lg border border-slate-600 transition-colors flex items-center"><span class="bg-slate-900 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm border border-slate-500">${opt}</span>${q.options[opt]}</button>`; });
+                            quizHtml += `</div>`;
+                        } else if (q.type === 'flashcard') {
+                            quizHtml += `<div class="flashcard cursor-pointer w-full" onclick="flipCard(this, ${q.id})"><div class="flashcard-inner bg-slate-700 rounded-xl shadow-inner border border-slate-600"><div class="flashcard-front"><i class="fas fa-undo-alt text-slate-400 mb-3 text-2xl"></i><p class="text-slate-300 font-medium">Clique para revelar a resposta</p></div><div class="flashcard-back bg-blue-900/40"><p class="text-white font-medium text-lg mb-6">${q.answer}</p><div class="flex space-x-4 w-full px-6" onclick="event.stopPropagation()"><button onclick="submitFlashcardAnswer(${q.id}, true, this)" class="flex-1 bg-green-600 hover:bg-green-500 text-white py-2 rounded shadow transition-colors"><i class="fas fa-check mr-2"></i>Acertei</button><button onclick="submitFlashcardAnswer(${q.id}, false, this)" class="flex-1 bg-red-600 hover:bg-red-500 text-white py-2 rounded shadow transition-colors"><i class="fas fa-times mr-2"></i>Errei</button></div></div></div></div>`;
+                        }
+                        quizHtml += `<div id="feedback-${q.id}" class="mt-4 hidden p-3 rounded font-medium text-center"></div></div>`;
+                    });
+                    quizHtml += `</div>`;
+                });
+                quizHtml += `</div>`;
             }
 
             const navigationHtml = `
@@ -831,6 +975,19 @@
             window.scrollTo(0,0);
         }
 
+        function toggleQuizGroup(type, chapterId) {
+            document.querySelectorAll('.quiz-group').forEach(group => {
+                group.classList.toggle('hidden', group.id !== `quiz-group-${type}-${chapterId}`);
+            });
+            document.querySelectorAll('.quiz-group-toggle').forEach(button => {
+                const active = button.getAttribute('aria-controls') === `quiz-group-${type}-${chapterId}`;
+                button.setAttribute('aria-expanded', active ? 'true' : 'false');
+                button.classList.toggle('ring-2', active);
+                button.classList.toggle('ring-blue-500', active);
+                button.classList.toggle('border-blue-500', active);
+            });
+        }
+
         function submitAnswer(questionId, selectedValue, btnElement) {
             const question = db.questions.find(q => q.id === questionId);
             if (!question) return;
@@ -864,6 +1021,9 @@
                 let correctText = question.type === 'tf' ? (question.answer === 'T' ? 'Certo' : 'Errado') : `Alternativa ${question.answer}`;
                 feedback.innerHTML = `<i class="fas fa-times-circle mr-2"></i> Resposta Incorreta. A correta era: <b>${correctText}</b>`;
             }
+
+            // Exibe o comentário/explicação configurado para a questão
+            showQuestionComment(questionId, question.comment);
         }
 
         function flipCard(cardElement, questionId) {
@@ -893,6 +1053,38 @@
                 feedback.classList.add('bg-orange-900/50', 'text-orange-400', 'border', 'border-orange-800');
                 feedback.innerHTML = `<i class="fas fa-sync-alt mr-2"></i> Continue praticando este flashcard.`;
             }
+
+            // Exibe o comentário/explicação configurado para a questão
+            showQuestionComment(questionId, question.comment);
+        }
+
+        function showQuestionComment(questionId, comment) {
+            if (!comment || !comment.trim()) return;
+
+            const card = document.getElementById(`question-card-${questionId}`);
+            if (!card) return;
+
+            // Evita duplicar o comentário caso a função seja chamada novamente
+            let commentBox = document.getElementById(`comment-${questionId}`);
+
+            if (!commentBox) {
+                commentBox = document.createElement('div');
+                commentBox.id = `comment-${questionId}`;
+                commentBox.className = 'mt-3 p-4 rounded-lg bg-blue-900/30 border border-blue-800 text-slate-200 text-sm leading-relaxed';
+
+                const feedback = document.getElementById(`feedback-${questionId}`);
+                feedback.insertAdjacentElement('afterend', commentBox);
+            }
+
+            commentBox.innerHTML = `
+                <div class="flex items-start gap-3">
+                    <i class="fas fa-lightbulb text-yellow-400 mt-0.5"></i>
+                    <div>
+                        <strong class="text-blue-300 block mb-1">Comentário</strong>
+                        <div class="whitespace-pre-line">${comment}</div>
+                    </div>
+                </div>
+            `;
         }
 
         function recordResponse(questionId, chapterId, isCorrect) {
@@ -945,7 +1137,9 @@
             document.getElementById('chapter-content').innerHTML = chapter.content;
 
             // Load existing questions into temporary array
-            currentChapterQuestions = db.questions.filter(q => q.chapterId === chapterId).map(q => ({...q})); // Clone
+            currentChapterQuestions = db.questions
+                .filter(q => q.chapterId === chapterId)
+                .map(q => ({...q, comment: q.comment || ''})); // Clone + compatibilidade com questões antigas
             renderQuizEditor();
 
             document.getElementById('modal-title').innerText = "Editar Capítulo";
@@ -1023,7 +1217,8 @@
                 type: 'tf', // tf, mc, flashcard
                 question: '',
                 answer: 'T',
-                options: { A: '', B: '', C: '', D: '', E: '' }
+                options: { A: '', B: '', C: '', D: '', E: '' },
+                comment: ''
             };
             currentChapterQuestions.push(newQ);
             renderQuizEditor();
@@ -1111,6 +1306,23 @@
                             </div>
                         </div>
                         ${bodyHtml}
+
+                        <!-- Comentário/Explicação exibido após a resposta -->
+                        <div class="mt-4 pt-4 border-t border-slate-700">
+                            <label class="block text-xs text-slate-400 mb-1">
+                                <i class="fas fa-comment-alt text-blue-400 mr-1"></i>
+                                Comentário após a resposta
+                            </label>
+                            <textarea
+                                onchange="updateQuestionField(${qId}, 'comment', this.value)"
+                                placeholder="Digite uma explicação, comentário ou justificativa que será exibida após o aluno responder..."
+                                rows="3"
+                                class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                            >${q.comment || ''}</textarea>
+                            <p class="text-xs text-slate-500 mt-1">
+                                Este comentário aparecerá somente depois que a questão for respondida.
+                            </p>
+                        </div>
                     </div>
                 `;
             });
@@ -1215,7 +1427,8 @@
                     type: q.type,
                     question: q.question,
                     answer: q.answer,
-                    options: q.options
+                    options: q.options,
+                    comment: q.comment || ''
                 });
             });
 
@@ -1532,7 +1745,7 @@
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-400 mb-1">Tipo de Questão</label>
-                            <select id="filter-type" onchange="renderQuizList()" class="w-full bg-slate-900 border border-slate-600 rounded p-2 text-white text-sm focus:border-purple-500 outline-none">
+                            <select id="filter-type" onchange="renderQuizList()" class="w-full bg-slate-900 border border-slate-600 rounded p-2 text-white text-sm focus:border-purple-500 outline-none practice-filter-control">
                                 <option value="">Todos os Tipos</option>
                                 <option value="tf">Certo / Errado</option>
                                 <option value="mc">Múltipla Escolha</option>
@@ -1541,7 +1754,7 @@
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-400 mb-1">Ordenar por</label>
-                            <select id="filter-sort" onchange="renderQuizList()" class="w-full bg-slate-900 border border-slate-600 rounded p-2 text-white text-sm focus:border-purple-500 outline-none">
+                            <select id="filter-sort" onchange="renderQuizList()" class="w-full bg-slate-900 border border-slate-600 rounded p-2 text-white text-sm focus:border-purple-500 outline-none practice-filter-control">
                                 <option value="default">Padrão</option>
                                 <option value="worst">Mais Erradas (Foco)</option>
                                 <option value="best">Mais Acertadas</option>
