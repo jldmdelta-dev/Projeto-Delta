@@ -461,6 +461,14 @@
                             </div>
                         </div>
 
+                        <!-- SALVAR ALTERAÇÕES ANTES DAS QUESTÕES -->
+                        <div class="flex justify-end mt-6 mb-4">
+                            <button type="submit"
+                                class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-5 py-2.5 rounded-md transition-colors shadow-lg flex items-center">
+                                <i class="fas fa-save mr-2"></i> Salvar Alterações
+                            </button>
+                        </div>
+
                         <!-- SESSÃO DE QUIZ -->
                         <div class="border-t border-slate-600 pt-4 mt-6">
                             <div class="flex justify-between items-center mb-4">
@@ -470,18 +478,24 @@
                                     </h3>
                                     <p class="text-xs text-slate-400">Teste de conhecimento após a leitura.</p>
                                 </div>
-                                <button type="button" onclick="addQuizQuestion()" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-md text-sm transition-colors border border-slate-500 flex items-center shadow">
-                                    <i class="fas fa-plus mr-1"></i> Nova Questão
-                                </button>
+                                
                             </div>
                             
                             <!-- Container onde as questões serão listadas durante a edição -->
                             <div id="quiz-editor-container" class="space-y-4">
                                 <!-- Questões dinâmicas renderizadas aqui -->
                             </div>
+
+                            <!-- NOVA QUESTÃO: abaixo do último card -->
+                            <div class="flex justify-center mt-5">
+                                <button type="button" onclick="addQuizQuestion()"
+                                    class="bg-slate-700 hover:bg-slate-600 text-white px-5 py-2.5 rounded-md text-sm transition-colors border border-slate-500 flex items-center shadow">
+                                    <i class="fas fa-plus mr-2"></i> Nova Questão
+                                </button>
+                            </div>
                         </div>
 
-                        <button type="submit" id="submit-chapter-btn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-md transition-colors mt-6 shadow-lg text-lg">Publicar Capítulo</button>
+                        <button type="submit" id="submit-chapter-btn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-md transition-colors mt-6 shadow-lg text-lg">Salvar Alterações</button>
                     </div>
                 </form>
             </div>
@@ -541,6 +555,7 @@
         };
 
         let currentChapterQuestions = []; // Array temporário para o editor de quiz
+        let expandedQuizEditorQuestions = new Set(); // Questões abertas no editor
 
         // =========================================================
         // BACKUP COMPLETO + INTEGRIDADE + CONFIGURAÇÕES
@@ -1140,6 +1155,7 @@
             currentChapterQuestions = db.questions
                 .filter(q => q.chapterId === chapterId)
                 .map(q => ({...q, comment: q.comment || ''})); // Clone + compatibilidade com questões antigas
+            expandedQuizEditorQuestions.clear();
             renderQuizEditor();
 
             document.getElementById('modal-title').innerText = "Editar Capítulo";
@@ -1182,6 +1198,7 @@
             editingNovelId = null;
             editingChapterId = null;
             currentChapterQuestions = [];
+            expandedQuizEditorQuestions.clear();
             
             document.getElementById('modal-title').innerText = "O que você deseja postar?";
             document.getElementById('submit-novel-btn').innerText = "Criar Matéria";
@@ -1221,11 +1238,22 @@
                 comment: ''
             };
             currentChapterQuestions.push(newQ);
+            expandedQuizEditorQuestions.add(newQ.tempId);
+            renderQuizEditor();
+        }
+
+        function toggleQuizEditorQuestion(id) {
+            if (expandedQuizEditorQuestions.has(id)) {
+                expandedQuizEditorQuestions.delete(id);
+            } else {
+                expandedQuizEditorQuestions.add(id);
+            }
             renderQuizEditor();
         }
 
         function removeQuizQuestion(tempId) {
             currentChapterQuestions = currentChapterQuestions.filter(q => q.tempId !== tempId && q.id !== tempId);
+            expandedQuizEditorQuestions.delete(tempId);
             renderQuizEditor();
         }
 
@@ -1249,8 +1277,19 @@
                 return;
             }
 
+            const typeInfo = {
+                tf: { label: 'Certo ou Errado', icon: 'fa-circle-check', color: 'emerald' },
+                mc: { label: 'Múltipla Escolha', icon: 'fa-list-check', color: 'blue' },
+                flashcard: { label: 'Flashcard', icon: 'fa-clone', color: 'purple' }
+            };
+
             currentChapterQuestions.forEach((q, index) => {
                 const qId = q.tempId || q.id;
+                const isExpanded = expandedQuizEditorQuestions.has(qId);
+                const info = typeInfo[q.type] || typeInfo.tf;
+                const questionPreview = q.question && q.question.trim()
+                    ? q.question.trim()
+                    : 'Questão sem enunciado — clique para editar';
                 let bodyHtml = '';
 
                 if (q.type === 'tf') {
@@ -1274,54 +1313,71 @@
                             </div>
                         `;
                     });
-                    // Caso 'answer' não seja uma das opções válidas (ex: trocou de tf para mc), resetar
                     if (!['A','B','C','D','E'].includes(q.answer)) q.answer = 'A';
                     bodyHtml += `</div>`;
                 } else if (q.type === 'flashcard') {
                     bodyHtml = `
                         <div class="mt-2">
                             <label class="block text-xs text-slate-400 mb-1">Verso do Cartão (Resposta)</label>
-                            <textarea onchange="updateQuestionField(${qId}, 'answer', this.value)" placeholder="Explicação ou conceito que aparecerá no verso..." rows="2" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm focus:border-blue-500">${q.answer}</textarea>
+                            <textarea onchange="updateQuestionField(${qId}, 'answer', this.value)" placeholder="Explicação ou conceito que aparecerá no verso..." rows="2" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm">${q.answer}</textarea>
                         </div>
                     `;
                 }
 
                 container.innerHTML += `
-                    <div class="bg-slate-900 border border-slate-600 p-4 rounded-lg relative">
-                        <button type="button" onclick="removeQuizQuestion(${qId})" class="absolute top-2 right-2 text-slate-500 hover:text-red-500 transition-colors" title="Remover Questão">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                        <div class="flex flex-col sm:flex-row gap-4 mb-3">
-                            <div class="sm:w-1/3">
-                                <label class="block text-xs text-slate-400 mb-1">Tipo da Questão</label>
-                                <select onchange="updateQuestionField(${qId}, 'type', this.value)" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm focus:border-blue-500">
-                                    <option value="tf" ${q.type === 'tf' ? 'selected' : ''}>Certo ou Errado</option>
-                                    <option value="mc" ${q.type === 'mc' ? 'selected' : ''}>Múltipla Escolha</option>
-                                    <option value="flashcard" ${q.type === 'flashcard' ? 'selected' : ''}>Flashcard</option>
-                                </select>
-                            </div>
-                            <div class="sm:w-2/3">
-                                <label class="block text-xs text-slate-400 mb-1">${q.type === 'flashcard' ? 'Frente do Cartão (Pergunta/Conceito)' : 'Pergunta'}</label>
-                                <input type="text" value="${q.question}" onchange="updateQuestionField(${qId}, 'question', this.value)" placeholder="Digite aqui..." class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm focus:border-blue-500">
-                            </div>
+                    <div class="bg-slate-900 border ${isExpanded ? 'border-blue-500/70 shadow-lg shadow-blue-950/20' : 'border-slate-700'} rounded-xl overflow-hidden transition-all">
+                        <div class="flex items-center gap-3 p-3 bg-slate-800/70 hover:bg-slate-800 transition-colors">
+                            <button type="button" onclick="toggleQuizEditorQuestion(${qId})" class="flex-1 min-w-0 text-left flex items-center gap-3" aria-expanded="${isExpanded}">
+                                <span class="w-10 h-10 shrink-0 rounded-lg bg-slate-900 border border-slate-700 flex items-center justify-center text-${info.color}-400">
+                                    <i class="fas ${info.icon}"></i>
+                                </span>
+                                <span class="min-w-0 flex-1">
+                                    <span class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                                        <span>Questão ${index + 1}</span>
+                                        <span class="text-slate-600">•</span>
+                                        <span class="text-${info.color}-400">${info.label}</span>
+                                    </span>
+                                    <span class="block text-sm text-slate-200 truncate mt-0.5" title="${questionPreview}">${questionPreview}</span>
+                                </span>
+                                <i class="fas fa-chevron-${isExpanded ? 'up' : 'down'} text-slate-500 mr-1 transition-transform"></i>
+                            </button>
+                            <button type="button" onclick="removeQuizQuestion(${qId})" class="shrink-0 w-9 h-9 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-950/30 transition-colors" title="Remover Questão">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </div>
-                        ${bodyHtml}
 
-                        <!-- Comentário/Explicação exibido após a resposta -->
-                        <div class="mt-4 pt-4 border-t border-slate-700">
-                            <label class="block text-xs text-slate-400 mb-1">
-                                <i class="fas fa-comment-alt text-blue-400 mr-1"></i>
-                                Comentário após a resposta
-                            </label>
-                            <textarea
-                                onchange="updateQuestionField(${qId}, 'comment', this.value)"
-                                placeholder="Digite uma explicação, comentário ou justificativa que será exibida após o aluno responder..."
-                                rows="3"
-                                class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                            >${q.comment || ''}</textarea>
-                            <p class="text-xs text-slate-500 mt-1">
-                                Este comentário aparecerá somente depois que a questão for respondida.
-                            </p>
+                        <div class="${isExpanded ? '' : 'hidden'} border-t border-slate-700 p-4">
+                            <div class="flex flex-col sm:flex-row gap-4 mb-3">
+                                <div class="sm:w-1/3">
+                                    <label class="block text-xs text-slate-400 mb-1">Tipo da Questão</label>
+                                    <select onchange="updateQuestionField(${qId}, 'type', this.value)" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm focus:border-blue-500">
+                                        <option value="tf" ${q.type === 'tf' ? 'selected' : ''}>Certo ou Errado</option>
+                                        <option value="mc" ${q.type === 'mc' ? 'selected' : ''}>Múltipla Escolha</option>
+                                        <option value="flashcard" ${q.type === 'flashcard' ? 'selected' : ''}>Flashcard</option>
+                                    </select>
+                                </div>
+                                <div class="sm:w-2/3">
+                                    <label class="block text-xs text-slate-400 mb-1">${q.type === 'flashcard' ? 'Frente do Cartão (Pergunta/Conceito)' : 'Pergunta'}</label>
+                                    <input type="text" value="${q.question}" onchange="updateQuestionField(${qId}, 'question', this.value)" placeholder="Digite aqui..." class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm focus:border-blue-500">
+                                </div>
+                            </div>
+                            ${bodyHtml}
+
+                            <div class="mt-4 pt-4 border-t border-slate-700">
+                                <label class="block text-xs text-slate-400 mb-1">
+                                    <i class="fas fa-comment-alt text-blue-400 mr-1"></i>
+                                    Comentário após a resposta
+                                </label>
+                                <textarea
+                                    onchange="updateQuestionField(${qId}, 'comment', this.value)"
+                                    placeholder="Digite uma explicação, comentário ou justificativa que será exibida após o aluno responder..."
+                                    rows="3"
+                                    class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                >${q.comment || ''}</textarea>
+                                <p class="text-xs text-slate-500 mt-1">
+                                    Este comentário aparecerá somente depois que a questão for respondida.
+                                </p>
+                            </div>
                         </div>
                     </div>
                 `;
