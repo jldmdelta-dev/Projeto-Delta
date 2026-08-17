@@ -27,6 +27,22 @@
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.25);
         }
 
+        .home-organize-mode .novel-card {
+            cursor: grab;
+            border-color: #475569;
+        }
+        .home-organize-mode .novel-card:active {
+            cursor: grabbing;
+        }
+        .home-organize-mode .novel-card.dragging {
+            opacity: .45;
+            transform: scale(.98);
+        }
+        .home-organize-mode .novel-card.drag-over {
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 2px rgba(96,165,250,.25);
+        }
+
         .chapter-list-item {
             transition: background-color 0.2s;
         }
@@ -308,7 +324,7 @@
                     <div class="tooltip-content absolute right-0 top-full mt-2 w-64 bg-slate-800 rounded-xl shadow-2xl border border-slate-600 p-4 z-50">
                         <div class="text-center border-b border-slate-700 pb-2 mb-3">
                             <h4 class="text-white font-bold">Atividade de Leitura</h4>
-                            <p class="text-xs text-slate-400">Meta Diária: 30 minutos</p>
+                            <p class="text-xs text-slate-400">Meta Diária: <span id="tt-streak-goal">30 minutos</span></p>
                         </div>
                         <div class="space-y-2 text-sm">
                             <div class="flex justify-between text-slate-300"><span>Sequência Atual:</span> <strong class="text-white" id="tt-streak">0 dias</strong></div>
@@ -354,6 +370,19 @@
             <div class="flex justify-between items-center p-4 border-b border-slate-700"><div><h2 class="text-xl font-bold text-white"><i class="fas fa-cog text-blue-400 mr-2"></i>Configurações</h2><p class="text-xs text-slate-400 mt-1">Personalize o plano de fundo.</p></div><button onclick="closeSettings()" class="text-slate-400 hover:text-white"><i class="fas fa-times text-xl"></i></button></div>
             <div class="p-6 space-y-5">
                 <div><label class="block text-sm font-medium text-slate-300 mb-2">Cor de fundo</label><div class="flex gap-3 items-center"><input type="color" id="settings-bg-color" value="#0f172a" class="w-14 h-10 p-1 bg-slate-900 border border-slate-600 rounded cursor-pointer" onchange="previewBackgroundColor(this.value)"><input type="text" id="settings-bg-color-text" value="#0f172a" maxlength="7" class="flex-1 bg-slate-900 border border-slate-600 rounded-md p-2 text-white uppercase" onchange="setBackgroundColorFromText()"></div></div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Meta diária do Streak</label>
+                    <div class="flex items-center gap-3">
+                        <input type="number" id="settings-streak-goal" min="1" max="1440" step="1"
+                            class="w-full bg-slate-900 border border-slate-600 rounded-md p-2 text-white outline-none focus:border-blue-500"
+                            placeholder="30">
+                        <span class="text-sm text-slate-400 whitespace-nowrap">minutos</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-2">
+                        Tempo ativo necessário por dia para completar a meta e manter o Streak.
+                    </p>
+                </div>
+
                 <div><label class="block text-sm font-medium text-slate-300 mb-2">Imagem de fundo</label><div class="border-2 border-dashed border-slate-600 rounded-lg p-4 text-center"><input type="file" id="settings-bg-image" accept="image/*" class="hidden" onchange="handleBackgroundImage(event)"><label for="settings-bg-image" class="inline-flex items-center bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-md cursor-pointer"><i class="fas fa-image mr-2"></i>Escolher imagem</label><p id="settings-bg-image-name" class="text-xs text-slate-500 mt-2">Nenhuma imagem selecionada</p></div></div>
                 <div class="flex items-center justify-between bg-slate-900/70 rounded-lg p-3 border border-slate-700"><div><p class="text-sm font-medium text-white">Usar imagem como fundo</p><p class="text-xs text-slate-500">A imagem será incluída no backup.</p></div><input type="checkbox" id="settings-bg-image-enabled" class="w-5 h-5" onchange="applySavedBackgroundSettings()"></div>
                 <div class="flex gap-2"><button onclick="clearBackgroundImage()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-md">Remover imagem</button><button onclick="saveSettings()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-md font-medium">Salvar</button></div>
@@ -389,7 +418,7 @@
                             <input type="text" id="novel-genres" placeholder="Direito, Gerais, Lei..." required class="w-full bg-slate-900 border border-slate-600 rounded-md p-2 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-1">Capa da Matéria</label>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Capa da Matéria <span class="text-xs text-slate-500">(opcional)</span></label>
                             <div class="flex space-x-2 mb-2">
                                 <button type="button" onclick="setCoverMode('url')" id="btn-cover-url" class="px-3 py-1 bg-blue-600 text-white rounded-md text-sm">Usar URL</button>
                                 <button type="button" onclick="setCoverMode('upload')" id="btn-cover-upload" class="px-3 py-1 bg-slate-700 text-slate-300 rounded-md text-sm">Fazer Upload</button>
@@ -551,7 +580,7 @@
                 timeByNovel: {},
                 timeByChapter: {}
             },
-            settings: { backgroundColor: "#0f172a", backgroundImage: "", backgroundImageEnabled: false }
+            settings: { backgroundColor: "#0f172a", backgroundImage: "", backgroundImageEnabled: false, streakGoalMinutes: 30, homeOrder: [], cycleReadNovelId: null, lastReadAtByNovel: {} }
         };
 
         let currentChapterQuestions = []; // Array temporário para o editor de quiz
@@ -563,10 +592,28 @@
         const BACKUP_VERSION = 2;
         const STORAGE_KEY = "minhasNovelsData";
 
-        function defaultSettings(){ return {backgroundColor:"#0f172a",backgroundImage:"",backgroundImageEnabled:false}; }
+        function defaultSettings(){ return {backgroundColor:"#0f172a",backgroundImage:"",backgroundImageEnabled:false,streakGoalMinutes:30,homeOrder:[],cycleReadNovelId:null,lastReadAtByNovel:{}}; }
+        function loadSavedData(){
+            try{
+                const saved=localStorage.getItem(STORAGE_KEY);
+                if(saved){
+                    const parsed=JSON.parse(saved);
+                    db=normalizeDatabase(parsed);
+                } else {
+                    db=normalizeDatabase(db);
+                    saveToLocal();
+                }
+            }catch(err){
+                console.error("Falha ao carregar dados locais:",err);
+                db=normalizeDatabase(db);
+            }
+            applySavedBackgroundSettings();
+            checkDailyReset();
+            updateStreakUI();
+        }
         function normalizeDatabase(data){
-            const u={totalDaysVisited:0,firstAccess:null,lastDateActive:null,currentStreak:0,highestStreak:0,totalActiveTime:0,todayActiveTime:0,goalReachedToday:false,timeByNovel:{},timeByChapter:{}};
-            return {novels:Array.isArray(data?.novels)?data.novels:[],chapters:Array.isArray(data?.chapters)?data.chapters:[],questions:Array.isArray(data?.questions)?data.questions.map(q=>({...q,comment:q.comment||""})):[],quizResponses:Array.isArray(data?.quizResponses)?data.quizResponses:[],userStats:{...u,...(data?.userStats||{}),timeByNovel:{...(data?.userStats?.timeByNovel||{})},timeByChapter:{...(data?.userStats?.timeByChapter||{})}},settings:{...defaultSettings(),...(data?.settings||{})}};
+            const u={totalDaysVisited:0,firstAccess:null,lastDateActive:null,currentStreak:0,highestStreak:0,totalActiveTime:0,todayActiveTime:0,goalReachedToday:false,timeByNovel:{},timeByChapter:{},practiceTime:0};
+            return {novels:Array.isArray(data?.novels)?data.novels:[],chapters:Array.isArray(data?.chapters)?data.chapters:[],questions:Array.isArray(data?.questions)?data.questions.map(q=>({...q,comment:q.comment||""})):[],quizResponses:Array.isArray(data?.quizResponses)?data.quizResponses:[],userStats:{...u,...(data?.userStats||{}),practiceTime:(data?.userStats?.practiceTime||0),timeByNovel:{...(data?.userStats?.timeByNovel||{})},timeByChapter:{...(data?.userStats?.timeByChapter||{})}},settings:{...defaultSettings(),...(data?.settings||{}),streakGoalMinutes:Math.max(1,Number(data?.settings?.streakGoalMinutes)||30),homeOrder:Array.isArray(data?.settings?.homeOrder)?data.settings.homeOrder:[],cycleReadNovelId:data?.settings?.cycleReadNovelId ?? null,lastReadAtByNovel:{...(data?.settings?.lastReadAtByNovel||{})}}};
         }
         function stableSerialize(v){ if(v===null||typeof v!=="object") return JSON.stringify(v); if(Array.isArray(v)) return "["+v.map(stableSerialize).join(",")+"]"; return "{"+Object.keys(v).sort().map(k=>JSON.stringify(k)+":"+stableSerialize(v[k])).join(",")+"}"; }
         function simpleChecksum(t){let h=2166136261;for(let i=0;i<t.length;i++){h^=t.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0).toString(16).padStart(8,"0");}
@@ -577,12 +624,41 @@
             try{saveToLocal();const backup=buildBackup();backup.integrity={algorithm:window.crypto?.subtle?"SHA-256":"FNV-1a-32",checksum:await checksum(stableSerialize(backup.data))};const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`projeto-delta-backup-${new Date().toISOString().replace(/[:.]/g,"-")}.json`;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);showNotification("Backup completo exportado com sucesso!");}catch(e){console.error(e);showNotification("Erro ao exportar backup.",true);}
         }
         async function importData(event){
-            const file=event.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=async e=>{try{
-                const raw=JSON.parse(e.target.result);const modern=!!(raw&&raw.backupVersion&&raw.data);const data=modern?raw.data:raw;
-                if(!data||!Array.isArray(data.novels)||!Array.isArray(data.chapters)||!Array.isArray(data.questions))throw new Error("Estrutura do backup inválida.");
-                if(modern&&raw.integrity?.checksum){const got=await checksum(stableSerialize(data));if(got!==raw.integrity.checksum)throw new Error("Falha na integridade: arquivo corrompido ou alterado.");}
-                db=normalizeDatabase(data);applySavedBackgroundSettings();saveToLocal();checkDailyReset();updateStreakUI();showHome();showNotification(`Backup importado com sucesso${modern?" e verificado":""}.`);
-            }catch(err){console.error(err);showNotification(`Backup não importado: ${err.message}`,true);}event.target.value="";};reader.readAsText(file);
+            const file=event.target.files[0];
+            if(!file)return;
+            const reader=new FileReader();
+            reader.onload=async e=>{
+                try{
+                    const raw=JSON.parse(e.target.result);
+                    // Compatível com backups novos e antigos: aceita data/database/db ou o próprio objeto.
+                    const data=(raw&&raw.data&&typeof raw.data==='object')?raw.data:
+                               (raw&&raw.database&&typeof raw.database==='object')?raw.database:
+                               (raw&&raw.db&&typeof raw.db==='object')?raw.db:raw;
+                    const modern=!!(raw&&raw.data&&raw.backupVersion);
+                    if(!data||!Array.isArray(data.novels)||!Array.isArray(data.chapters)){
+                        throw new Error("Estrutura do backup inválida: matérias ou capítulos não encontrados.");
+                    }
+                    // Backups antigos podem não ter questions/quizResponses; normalizeDatabase os completa.
+                    if(modern&&raw.integrity?.checksum){
+                        const got=await checksum(stableSerialize(data));
+                        if(got!==raw.integrity.checksum)throw new Error("Falha na integridade: arquivo corrompido ou alterado.");
+                    }
+                    db=normalizeDatabase(data);
+                    applySavedBackgroundSettings();
+                    saveToLocal();
+                    checkDailyReset();
+                    updateStreakUI();
+                    showHome();
+                    showNotification(`Backup importado com sucesso${modern?" e verificado":""}.`);
+                }catch(err){
+                    console.error(err);
+                    showNotification(`Backup não importado: ${err.message}`,true);
+                }finally{
+                    event.target.value="";
+                }
+            };
+            reader.onerror=()=>{ event.target.value=""; showNotification("Não foi possível ler o arquivo de backup.",true); };
+            reader.readAsText(file);
         }
 
         // =========================================================
@@ -591,13 +667,37 @@
         function ensureSettings(){if(!db.settings)db.settings=defaultSettings();return db.settings;}
         function openSettings(){loadSettingsIntoForm();document.getElementById("settings-modal").classList.remove("hidden");}
         function closeSettings(){document.getElementById("settings-modal").classList.add("hidden");}
-        function loadSettingsIntoForm(){const x=ensureSettings();document.getElementById("settings-bg-color").value=x.backgroundColor||"#0f172a";document.getElementById("settings-bg-color-text").value=x.backgroundColor||"#0f172a";document.getElementById("settings-bg-image-enabled").checked=!!x.backgroundImageEnabled;document.getElementById("settings-bg-image-name").textContent=x.backgroundImage?"Imagem salva no sistema":"Nenhuma imagem selecionada";}
+        function loadSettingsIntoForm(){
+            const x=ensureSettings();
+            document.getElementById("settings-bg-color").value=x.backgroundColor||"#0f172a";
+            document.getElementById("settings-bg-color-text").value=x.backgroundColor||"#0f172a";
+            document.getElementById("settings-bg-image-enabled").checked=!!x.backgroundImageEnabled;
+            document.getElementById("settings-bg-image-name").textContent=x.backgroundImage?"Imagem salva no sistema":"Nenhuma imagem selecionada";
+            const streakGoal=document.getElementById("settings-streak-goal");
+            if(streakGoal) streakGoal.value=Math.max(1,Number(x.streakGoalMinutes)||30);
+        }
         function previewBackgroundColor(v){ensureSettings().backgroundColor=v;document.getElementById("settings-bg-color-text").value=v;applySavedBackgroundSettings();}
         function setBackgroundColorFromText(){let v=document.getElementById("settings-bg-color-text").value.trim();if(!/^#[0-9a-fA-F]{6}$/.test(v)){showNotification("Use uma cor no formato #RRGGBB.",true);loadSettingsIntoForm();return;}document.getElementById("settings-bg-color").value=v;previewBackgroundColor(v);}
         function applySavedBackgroundSettings(){const x=ensureSettings();document.body.style.backgroundColor=x.backgroundColor||"#0f172a";if(x.backgroundImage&&x.backgroundImageEnabled){document.body.style.backgroundImage=`linear-gradient(rgba(15,23,42,.35),rgba(15,23,42,.35)),url("${x.backgroundImage}")`;}else document.body.style.backgroundImage="none";}
         function handleBackgroundImage(e){const f=e.target.files[0];if(!f)return;if(!f.type.startsWith("image/")){showNotification("Selecione uma imagem válida.",true);return;}const r=new FileReader();r.onload=ev=>{ensureSettings().backgroundImage=ev.target.result;ensureSettings().backgroundImageEnabled=true;document.getElementById("settings-bg-image-enabled").checked=true;document.getElementById("settings-bg-image-name").textContent=f.name;applySavedBackgroundSettings();};r.readAsDataURL(f);}
         function clearBackgroundImage(){ensureSettings().backgroundImage="";ensureSettings().backgroundImageEnabled=false;document.getElementById("settings-bg-image-enabled").checked=false;document.getElementById("settings-bg-image-name").textContent="Nenhuma imagem selecionada";applySavedBackgroundSettings();}
-        function saveSettings(){ensureSettings().backgroundColor=document.getElementById("settings-bg-color").value;ensureSettings().backgroundImageEnabled=document.getElementById("settings-bg-image-enabled").checked;saveToLocal();applySavedBackgroundSettings();closeSettings();showNotification("Configurações salvas.");}
+        function saveSettings(){
+            const settings=ensureSettings();
+            const streakInput=document.getElementById("settings-streak-goal");
+            const streakMinutes=Math.floor(Number(streakInput?.value));
+            if(!Number.isFinite(streakMinutes) || streakMinutes < 1 || streakMinutes > 1440){
+                showNotification("A meta diária do Streak deve estar entre 1 e 1440 minutos.",true);
+                return;
+            }
+            settings.backgroundColor=document.getElementById("settings-bg-color").value;
+            settings.backgroundImageEnabled=document.getElementById("settings-bg-image-enabled").checked;
+            settings.streakGoalMinutes=streakMinutes;
+            saveToLocal();
+            applySavedBackgroundSettings();
+            updateStreakUI();
+            closeSettings();
+            showNotification("Configurações salvas.");
+        }
 
         // ==========================================
         // SISTEMA DE RASTREAMENTO E CHECK-IN DIÁRIO
@@ -622,6 +722,28 @@
             const h = Math.floor(seconds / 3600);
             const m = Math.floor((seconds % 3600) / 60);
             return h > 0 ? `${h}h ${m}m` : `${m}m`;
+        }
+
+        function formatTimeLong(seconds) {
+            const s = Math.max(0, Math.floor(seconds || 0));
+            const h = Math.floor(s / 3600);
+            const m = Math.floor((s % 3600) / 60);
+            const sec = s % 60;
+            return h > 0
+                ? `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`
+                : `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+        }
+
+        function getNovelTime(novelId) {
+            return (db.userStats?.timeByNovel?.[novelId] || 0);
+        }
+
+        function getChapterTime(chapterId) {
+            return (db.userStats?.timeByChapter?.[chapterId] || 0);
+        }
+
+        function getCoverUrl(cover) {
+            return cover || 'https://placehold.co/300x450/1e293b/f8fafc?text=Sem+Capa';
         }
 
         function checkDailyReset() {
@@ -679,6 +801,9 @@
             document.getElementById('tt-days-visited').innerText = db.userStats.totalDaysVisited;
             document.getElementById('tt-time-today').innerText = formatTime(db.userStats.todayActiveTime);
             document.getElementById('tt-time-total').innerText = formatTime(db.userStats.totalActiveTime);
+            const goalMinutes = Math.max(1, Number(ensureSettings().streakGoalMinutes) || 30);
+            const goalLabel = document.getElementById('tt-streak-goal');
+            if (goalLabel) goalLabel.innerText = `${goalMinutes} ${goalMinutes === 1 ? 'minuto' : 'minutos'}`;
         }
 
         // Heartbeat de tracking que roda a cada 1 segundo
@@ -700,8 +825,18 @@
                     db.userStats.timeByChapter[activeChapterId] = (db.userStats.timeByChapter[activeChapterId] || 0) + 1;
                 }
 
-                // Check Meta Diária (30 minutos = 1800 segundos)
-                if (db.userStats.todayActiveTime >= 1800 && !db.userStats.goalReachedToday) {
+                // Contador da Central de Prática.
+                // É um contador de sessão visível e também fica salvo no backup como tempo total de prática.
+                if (currentView === 'practice') {
+                    practiceSessionSeconds++;
+                    db.userStats.practiceTime = (db.userStats.practiceTime || 0) + 1;
+                    const practiceTimer = document.getElementById('practice-time-counter');
+                    if (practiceTimer) practiceTimer.textContent = formatTimeLong(practiceSessionSeconds);
+                }
+
+                // Check Meta Diária configurável.
+                const streakGoalSeconds = Math.max(1, Number(ensureSettings().streakGoalMinutes) || 30) * 60;
+                if (db.userStats.todayActiveTime >= streakGoalSeconds && !db.userStats.goalReachedToday) {
                     db.userStats.goalReachedToday = true;
                     db.userStats.currentStreak = (db.userStats.currentStreak || 0) + 1;
                     
@@ -729,6 +864,8 @@
         let editingChapterId = null;
         let activeNovelId = null;
         let activeChapterId = null;
+        let currentView = 'home';
+        let practiceSessionSeconds = 0;
         let myChartInstance1 = null;
         let myChartInstance2 = null;
 
@@ -736,43 +873,219 @@
             // Remove highlighting logic for simplicity, handled by hover states
         }
 
+        function getHomeOrderedNovels() {
+            const ids = Array.isArray(db.settings?.homeOrder) ? db.settings.homeOrder : [];
+            const byId = new Map(db.novels.map(n => [n.id, n]));
+            const ordered = [];
+            ids.forEach(id => {
+                const n = byId.get(Number(id));
+                if (n) {
+                    ordered.push(n);
+                    byId.delete(Number(id));
+                }
+            });
+            db.novels.forEach(n => {
+                if (byId.has(n.id)) ordered.push(n);
+            });
+
+            // Matéria marcada como concluída no ciclo atual vai para o final.
+            const cycleId = db.settings?.cycleReadNovelId;
+            if (cycleId != null) {
+                const idx = ordered.findIndex(n => Number(n.id) === Number(cycleId));
+                if (idx > -1) {
+                    const [cycleNovel] = ordered.splice(idx, 1);
+                    ordered.push(cycleNovel);
+                }
+            }
+            return ordered;
+        }
+
+        function syncHomeOrderFromList() {
+            const orderedIds = Array.from(document.querySelectorAll('[data-home-novel-id]'))
+                .map(el => Number(el.dataset.homeNovelId))
+                .filter(Number.isFinite);
+
+            ensureSettings().homeOrder = orderedIds;
+            saveToLocal();
+        }
+
+        function toggleHomeOrganizeMode() {
+            const active = !window.homeOrganizeMode;
+            window.homeOrganizeMode = active;
+            showHome();
+        }
+
+        function finishHomeOrganization() {
+            window.homeOrganizeMode = false;
+            syncHomeOrderFromList();
+            showHome();
+            showNotification("Ordem das matérias salva.");
+        }
+
+        function formatReadDate(date = new Date()) {
+            const d = new Date(date);
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = String(d.getFullYear()).slice(-2);
+            return `${day}/${month}/${year}`;
+        }
+
+        function moveCycleNovelToEnd(novelId) {
+            const settings = ensureSettings();
+            const id = Number(novelId);
+            settings.cycleReadNovelId = id;
+            if (!settings.lastReadAtByNovel || typeof settings.lastReadAtByNovel !== 'object') {
+                settings.lastReadAtByNovel = {};
+            }
+            settings.lastReadAtByNovel[id] = new Date().toISOString();
+
+            const ordered = getHomeOrderedNovels();
+            const idx = ordered.findIndex(n => Number(n.id) === id);
+            if (idx > -1) {
+                const [novel] = ordered.splice(idx, 1);
+                ordered.push(novel);
+                settings.homeOrder = ordered.map(n => n.id);
+            }
+            saveToLocal();
+            showHome();
+            showNotification("Matéria concluída e movida para o final.");
+        }
+
+        function setupHomeDragAndDrop() {
+            const container = document.getElementById('home-novels-grid');
+            if (!container || !window.homeOrganizeMode) return;
+
+            let draggedId = null;
+
+            container.querySelectorAll('[data-home-novel-id]').forEach(card => {
+                card.addEventListener('dragstart', e => {
+                    draggedId = Number(card.dataset.homeNovelId);
+                    card.classList.add('dragging');
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/plain', String(draggedId));
+                });
+
+                card.addEventListener('dragend', () => {
+                    card.classList.remove('dragging');
+                    container.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+                    draggedId = null;
+                });
+
+                card.addEventListener('dragover', e => {
+                    e.preventDefault();
+                    if (draggedId !== Number(card.dataset.homeNovelId)) {
+                        card.classList.add('drag-over');
+                        e.dataTransfer.dropEffect = 'move';
+                    }
+                });
+
+                card.addEventListener('dragleave', () => card.classList.remove('drag-over'));
+
+                card.addEventListener('drop', e => {
+                    e.preventDefault();
+                    card.classList.remove('drag-over');
+
+                    const targetId = Number(card.dataset.homeNovelId);
+                    if (!draggedId || draggedId === targetId) return;
+
+                    const current = getHomeOrderedNovels().map(n => n.id);
+                    const from = current.indexOf(draggedId);
+                    const to = current.indexOf(targetId);
+                    if (from < 0 || to < 0) return;
+
+                    current.splice(from, 1);
+                    current.splice(to, 0, draggedId);
+
+                    ensureSettings().homeOrder = current;
+                    saveToLocal();
+                    showHome();
+                });
+            });
+        }
+
         function showHome() {
+            currentView = 'home';
+            practiceSessionSeconds = 0;
             activeNovelId = null;
             activeChapterId = null;
             setActiveNav('home');
+
+            const orderedNovels = getHomeOrderedNovels();
+            const organizing = !!window.homeOrganizeMode;
+
             let html = `
-                <div class="mb-8">
-                    <h2 class="text-3xl font-bold text-white mb-2 border-l-4 border-blue-500 pl-3">Últimas Atualizações</h2>
-                    <p class="text-slate-400">Explore os conteúdos mais recentes.</p>
+                <div class="mb-6">
+                    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+                        <div>
+                            <h2 class="text-3xl font-bold text-white mb-2 border-l-4 border-blue-500 pl-3">Últimas Atualizações</h2>
+                            <p class="text-slate-400">${organizing ? 'Arraste e solte as matérias para definir a ordem de leitura.' : 'Explore os conteúdos mais recentes.'}</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            ${organizing
+                                ? `<button onclick="finishHomeOrganization()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-medium shadow flex items-center gap-2">
+                                    <i class="fas fa-check"></i> Salvar Ordem
+                                   </button>`
+                                : `<button onclick="toggleHomeOrganizeMode()" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg font-medium border border-slate-600 flex items-center gap-2">
+                                    <i class="fas fa-grip-vertical"></i> Organizar Matérias
+                                   </button>`}
+                        </div>
+                    </div>
                 </div>
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                <div id="home-novels-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 ${organizing ? 'home-organize-mode' : ''}">
             `;
 
-            if (db.novels.length === 0) {
-                html += `<div class="col-span-full text-center text-slate-500 py-10">Nenhuma novel publicada ainda.</div>`;
+            if (orderedNovels.length === 0) {
+                html += `<div class="col-span-full text-center text-slate-500 py-10">Nenhuma matéria publicada ainda.</div>`;
             } else {
-                db.novels.forEach(novel => {
+                orderedNovels.forEach((novel, index) => {
                     const chapterCount = db.chapters.filter(c => c.novelId === novel.id).length;
                     const genresHtml = novel.genres.map(g => `<span class="inline-block bg-slate-700 text-xs px-2 py-1 rounded-full text-slate-300 mr-1 mb-1">${g.trim()}</span>`).join('');
+                    const lastReadAt = db.settings?.lastReadAtByNovel?.[novel.id];
+                    const cycleBadge = lastReadAt
+                        ? `<span class="absolute top-2 left-2 bg-emerald-600/95 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow flex items-center gap-1"><i class="fas fa-check"></i> Lida ${formatReadDate(lastReadAt)}</span>`
+                        : '';
+                    const isRead = !!lastReadAt;
+
                     html += `
-                        <div class="novel-card bg-slate-800 rounded-lg overflow-hidden shadow-lg cursor-pointer flex flex-col h-full border border-slate-700" onclick="showNovelDetails(${novel.id})">
+                        <div data-home-novel-id="${novel.id}" draggable="${organizing}"
+                            class="novel-card bg-slate-800 rounded-lg overflow-hidden shadow-lg ${organizing ? 'cursor-grab' : 'cursor-pointer'} flex flex-col h-full border ${isRead ? 'border-emerald-600/60' : 'border-slate-700'}"
+                            ${organizing ? '' : `onclick="showNovelDetails(${novel.id})"`}>
                             <div class="relative pb-[140%]">
-                                <img src="${novel.cover}" alt="${novel.title}" class="absolute top-0 left-0 w-full h-full object-cover" onerror="this.src='https://placehold.co/300x450/1e293b/f8fafc?text=Sem+Capa'">
+                                <img src="${getCoverUrl(novel.cover)}" alt="${novel.title}" class="absolute top-0 left-0 w-full h-full object-cover" onerror="this.src='https://placehold.co/300x450/1e293b/f8fafc?text=Sem+Capa'">
                                 <div class="absolute top-2 right-2 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded shadow">${chapterCount} Cap.</div>
+                                ${cycleBadge}
+                                ${organizing ? `<div class="absolute inset-0 bg-slate-950/20 flex items-center justify-center pointer-events-none"><span class="bg-slate-900/85 text-white px-3 py-2 rounded-lg text-sm shadow"><i class="fas fa-arrows-alt mr-2"></i> Arraste</span></div>` : ''}
                             </div>
                             <div class="p-4 flex flex-col flex-grow">
-                                <h3 class="text-lg font-bold text-white mb-1 line-clamp-2">${novel.title}</h3>
+                                <div class="flex items-start justify-between gap-2 mb-1">
+                                    <h3 class="text-lg font-bold text-white line-clamp-2">${novel.title}</h3>
+                                    <span class="shrink-0 inline-flex items-center gap-1 text-xs text-blue-300 bg-blue-900/30 border border-blue-800/60 px-2 py-1 rounded-full" title="Tempo investido nesta matéria">
+                                        <i class="fas fa-clock"></i>${formatTime(getNovelTime(novel.id))}
+                                    </span>
+                                </div>
                                 <div class="mb-2 flex-grow">${genresHtml}</div>
+                                ${index === 0 ? `
+                                    <div class="mt-2 pt-3 border-t border-slate-700 flex justify-end" onclick="event.stopPropagation()">
+                                        <button type="button" aria-label="Concluir matéria" title="Concluir matéria"
+                                            onclick="moveCycleNovelToEnd(${novel.id})"
+                                            class="w-8 h-8 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center shadow transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-400/60">
+                                            <i class="fas fa-check text-xs"></i>
+                                        </button>
+                                    </div>` : ''}
                             </div>
                         </div>`;
                 });
             }
             html += `</div>`;
+
             appContent.innerHTML = html;
+            setupHomeDragAndDrop();
             window.scrollTo(0,0);
         }
 
         function showLibrary(selectedGenre = null) {
+            currentView = 'library';
+            practiceSessionSeconds = 0;
             activeNovelId = null;
             activeChapterId = null;
             setActiveNav('library');
@@ -802,11 +1115,16 @@
                     filterHtml += `
                         <div class="novel-card bg-slate-800 rounded-lg overflow-hidden shadow-lg cursor-pointer flex flex-col h-full border border-slate-700" onclick="showNovelDetails(${novel.id})">
                             <div class="relative pb-[140%]">
-                                <img src="${novel.cover}" alt="${novel.title}" class="absolute top-0 left-0 w-full h-full object-cover" onerror="this.src='https://placehold.co/300x450/1e293b/f8fafc?text=Sem+Capa'">
+                                <img src="${getCoverUrl(novel.cover)}" alt="${novel.title}" class="absolute top-0 left-0 w-full h-full object-cover" onerror="this.src='https://placehold.co/300x450/1e293b/f8fafc?text=Sem+Capa'">
                                 <div class="absolute top-2 right-2 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded shadow">${chapterCount} Cap.</div>
                             </div>
                             <div class="p-4 flex flex-col flex-grow">
-                                <h3 class="text-lg font-bold text-white mb-1 line-clamp-2">${novel.title}</h3>
+                                <div class="flex items-start justify-between gap-2 mb-1">
+                                    <h3 class="text-lg font-bold text-white line-clamp-2">${novel.title}</h3>
+                                    <span class="shrink-0 inline-flex items-center gap-1 text-xs text-blue-300 bg-blue-900/30 border border-blue-800/60 px-2 py-1 rounded-full" title="Tempo investido nesta matéria">
+                                        <i class="fas fa-clock"></i>${formatTime(getNovelTime(novel.id))}
+                                    </span>
+                                </div>
                                 <div class="mb-2 flex-grow">${genresHtml}</div>
                             </div>
                         </div>`;
@@ -818,6 +1136,8 @@
         }
 
         function showNovelDetails(novelId) {
+            currentView = 'novel';
+            practiceSessionSeconds = 0;
             activeNovelId = novelId;
             activeChapterId = null;
             const novel = db.novels.find(n => n.id === novelId);
@@ -831,11 +1151,17 @@
                 <div class="bg-slate-800 rounded-xl shadow-xl overflow-hidden border border-slate-700 mb-8">
                     <div class="md:flex">
                         <div class="md:w-1/3 lg:w-1/4 p-6 flex justify-center md:justify-start bg-slate-800/50 border-r border-slate-700">
-                            <img src="${novel.cover}" alt="${novel.title}" class="rounded-lg shadow-lg w-full max-w-xs object-cover" style="aspect-ratio: 2/3;" onerror="this.src='https://placehold.co/300x450/1e293b/f8fafc?text=Sem+Capa'">
+                            <img src="${getCoverUrl(novel.cover)}" alt="${novel.title}" class="rounded-lg shadow-lg w-full max-w-xs object-cover" style="aspect-ratio: 2/3;" onerror="this.src='https://placehold.co/300x450/1e293b/f8fafc?text=Sem+Capa'">
                         </div>
                         <div class="md:w-2/3 lg:w-3/4 p-6 flex flex-col">
                             <div class="flex justify-between items-start mb-4">
-                                <h2 class="text-3xl md:text-4xl font-bold text-white">${novel.title}</h2>
+                                <div>
+                                    <h2 class="text-3xl md:text-4xl font-bold text-white">${novel.title}</h2>
+                                    <div class="mt-2 inline-flex items-center gap-2 text-sm text-blue-300 bg-blue-900/30 border border-blue-800/60 px-3 py-1.5 rounded-full">
+                                        <i class="fas fa-clock"></i>
+                                        <span>Tempo investido: ${formatTime(getNovelTime(novel.id))}</span>
+                                    </div>
+                                </div>
                                 <button onclick="openEditNovelModal(${novel.id})" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-md text-sm transition-colors border border-slate-600 flex items-center shadow-sm"><i class="fas fa-edit mr-2"></i> Editar</button>
                             </div>
                             <div class="mb-6 flex flex-wrap">${genresHtml}</div>
@@ -865,7 +1191,13 @@
 
                     html += `
                         <div onclick="showChapter(${novel.id}, ${chapter.id})" class="chapter-list-item flex justify-between items-center p-4 rounded-lg bg-slate-900/50 cursor-pointer border border-slate-700/50">
-                            <span class="font-medium text-slate-200">${chapter.title} ${quizIcon}</span>
+                            <span class="font-medium text-slate-200 min-w-0 flex items-center gap-2">
+                                <span class="truncate">${chapter.title}</span>
+                                ${quizIcon}
+                                <span class="shrink-0 inline-flex items-center gap-1 text-xs text-slate-400 bg-slate-800 border border-slate-700 px-2 py-1 rounded-full" title="Tempo investido neste capítulo">
+                                    <i class="fas fa-clock text-blue-400"></i>${formatTime(getChapterTime(chapter.id))}
+                                </span>
+                            </span>
                             <div class="flex items-center space-x-4">
                                 <button onclick="event.stopPropagation(); openEditChapterModal(${novel.id}, ${chapter.id})" class="text-slate-400 hover:text-blue-400 transition-colors" title="Editar Capítulo"><i class="fas fa-edit"></i></button>
                                 <i class="fas fa-chevron-right text-slate-500"></i>
@@ -880,6 +1212,8 @@
         }
 
         function showChapter(novelId, chapterId) {
+            currentView = 'chapter';
+            practiceSessionSeconds = 0;
             activeNovelId = novelId;
             activeChapterId = chapterId;
             const novel = db.novels.find(n => n.id === novelId);
@@ -1125,7 +1459,7 @@
             document.getElementById('novel-genres').value = novel.genres.join(', ');
             document.getElementById('novel-synopsis').value = novel.synopsis;
 
-            if (novel.cover.startsWith('data:image')) {
+            if ((novel.cover || '').startsWith('data:image')) {
                 setCoverMode('upload');
                 uploadedCoverDataUrl = novel.cover;
                 document.getElementById('cover-preview').src = novel.cover;
@@ -1395,7 +1729,7 @@
             const btnUpload = document.getElementById('btn-cover-upload');
 
             if (mode === 'url') {
-                urlInput.classList.remove('hidden'); uploadContainer.classList.add('hidden'); urlInput.setAttribute('required', 'true');
+                urlInput.classList.remove('hidden'); uploadContainer.classList.add('hidden'); urlInput.removeAttribute('required');
                 btnUrl.className = "px-3 py-1 bg-blue-600 text-white rounded-md text-sm";
                 btnUpload.className = "px-3 py-1 bg-slate-700 text-slate-300 rounded-md text-sm";
             } else {
@@ -1428,9 +1762,13 @@
             e.preventDefault();
             const title = document.getElementById('novel-title').value;
             const genresStr = document.getElementById('novel-genres').value;
-            let cover = currentCoverMode === 'url' ? document.getElementById('novel-cover-url').value : uploadedCoverDataUrl;
+            let cover = currentCoverMode === 'url' ? document.getElementById('novel-cover-url').value.trim() : uploadedCoverDataUrl;
+            if (editingNovelId && !cover) {
+                const existingNovel = db.novels.find(n => n.id === editingNovelId);
+                cover = existingNovel?.cover || '';
+            }
             
-            if (currentCoverMode === 'upload' && !cover) { showNotification("Selecione uma imagem.", true); return; }
+            // Capa é opcional: sem URL/upload a matéria será exibida com o placeholder "Sem Capa".
             const synopsis = document.getElementById('novel-synopsis').value;
             const genres = genresStr.split(',').map(g => g.trim()).filter(g => g !== "");
             const newId = editingNovelId ? editingNovelId : (db.novels.length > 0 ? Math.max(...db.novels.map(n => n.id)) + 1 : 1);
@@ -1440,10 +1778,10 @@
             if (editingNovelId) {
                 const index = db.novels.findIndex(n => n.id === editingNovelId);
                 db.novels[index] = novelData;
-                showNotification("Novel atualizada!");
+                showNotification("Matéria atualizada!");
             } else {
                 db.novels.push(novelData);
-                showNotification("Novel criada!");
+                showNotification("Matéria criada!");
             }
             saveToLocal();
             closePostModal();
@@ -1506,6 +1844,8 @@
         }
 
         function showStats() {
+            currentView = 'stats';
+            practiceSessionSeconds = 0;
             setActiveNav('stats');
             
             // Calculos Gerais
@@ -1591,12 +1931,58 @@
                     </div>
                 </div>
 
+                <!-- TEMPO POR MATÉRIA -->
+                <div class="mb-8">
+                    <div class="flex items-center justify-between gap-3 mb-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-white flex items-center">
+                                <i class="fas fa-book text-blue-400 mr-2"></i> Tempo por Matéria
+                            </h3>
+                            <p class="text-xs text-slate-400 mt-1">Clique em uma matéria para ver o tempo investido em cada capítulo.</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        ${db.novels.length ? db.novels.map(n => `
+                            <button type="button"
+                                onclick="toggleNovelTimeDetails(${n.id})"
+                                class="text-left bg-slate-800 p-5 rounded-xl border border-slate-700 shadow hover:border-blue-500/60 hover:bg-slate-750 transition-all group">
+                                <div class="flex items-center justify-between gap-3">
+                                    <div class="min-w-0">
+                                        <div class="font-bold text-white truncate" title="${n.title}">${n.title}</div>
+                                        <div class="text-xs text-slate-500 mt-1">${db.chapters.filter(c => c.novelId === n.id).length} capítulo(s)</div>
+                                    </div>
+                                    <div class="text-right shrink-0">
+                                        <div class="text-xl font-bold text-blue-300">${formatTime(getNovelTime(n.id))}</div>
+                                        <div class="text-[10px] uppercase tracking-wide text-slate-500">tempo total</div>
+                                    </div>
+                                </div>
+                                <div class="mt-3 text-xs text-slate-400 group-hover:text-blue-300 transition-colors">
+                                    <i class="fas fa-chevron-down mr-1"></i> Ver tempo por capítulo
+                                </div>
+                            </button>
+                        `).join('') : `
+                            <div class="col-span-full text-center py-8 text-slate-500 bg-slate-800 rounded-xl border border-slate-700">
+                                Nenhuma matéria cadastrada.
+                            </div>
+                        `}
+                    </div>
+                    <div id="novel-time-details" class="mt-4"></div>
+                </div>
+
                 <hr class="border-slate-700 my-8">
 
                 <!-- SEÇÃO DE QUIZZES -->
                 <h3 class="text-xl font-bold text-white mb-4 flex items-center"><i class="fas fa-brain text-purple-400 mr-2"></i> Desempenho em Questões</h3>
                 
                 <!-- Visão Geral -->
+                <div class="mb-6">
+                    <div class="inline-flex items-center gap-2 bg-purple-900/20 border border-purple-800/50 rounded-lg px-4 py-2 text-sm">
+                        <i class="fas fa-brain text-purple-400"></i>
+                        <span class="text-slate-400">Tempo total em Prática:</span>
+                        <strong class="text-purple-300">${formatTime(db.userStats?.practiceTime || 0)}</strong>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                     <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow flex flex-col items-center justify-center">
                         <i class="fas fa-list-ol text-blue-400 text-3xl mb-2"></i>
@@ -1713,6 +2099,43 @@
             renderCharts(correctResponses, wrongResponses, novelStats);
         }
 
+        function toggleNovelTimeDetails(novelId) {
+            const container = document.getElementById('novel-time-details');
+            if (!container) return;
+
+            const novel = db.novels.find(n => n.id === novelId);
+            if (!novel) return;
+
+            const chapters = db.chapters.filter(c => c.novelId === novelId);
+            const total = getNovelTime(novelId);
+
+            container.innerHTML = `
+                <div class="bg-slate-900/70 rounded-xl border border-blue-900/50 p-5 shadow-inner">
+                    <div class="flex items-center justify-between gap-3 mb-4">
+                        <div>
+                            <h4 class="font-bold text-white">${novel.title}</h4>
+                            <p class="text-xs text-slate-400 mt-1">Tempo total da matéria: <span class="text-blue-300 font-semibold">${formatTime(total)}</span></p>
+                        </div>
+                        <button type="button" onclick="document.getElementById('novel-time-details').innerHTML=''"
+                            class="text-slate-500 hover:text-white" title="Fechar detalhes">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="space-y-2">
+                        ${chapters.length ? chapters.map(c => `
+                            <div class="flex items-center justify-between gap-3 bg-slate-800/80 border border-slate-700 rounded-lg px-4 py-3">
+                                <span class="text-sm text-slate-200 truncate" title="${c.title}">${c.title}</span>
+                                <span class="shrink-0 text-sm font-semibold text-blue-300">
+                                    <i class="fas fa-clock mr-1 text-xs"></i>${formatTime(getChapterTime(c.id))}
+                                </span>
+                            </div>
+                        `).join('') : `
+                            <div class="text-sm text-slate-500 text-center py-4">Nenhum capítulo cadastrado nesta matéria.</div>
+                        `}
+                    </div>
+                </div>`;
+        }
+
         function renderCharts(correct, wrong, novelStats) {
             // Limpa instancias anteriores para evitar bugs no canvas
             if(myChartInstance1) myChartInstance1.destroy();
@@ -1768,14 +2191,22 @@
         }
 
         function showQuizzes() {
+            currentView = 'practice';
+            practiceSessionSeconds = 0;
             setActiveNav('quizzes');
             activeNovelId = null;
             activeChapterId = null;
 
             let html = `
-                <div class="mb-8">
-                    <h2 class="text-3xl font-bold text-white mb-2 border-l-4 border-purple-500 pl-3">Central de Prática</h2>
-                    <p class="text-slate-400">Filtre, ordene e resolva suas questões focando onde você mais precisa.</p>
+                <div class="mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+                    <div>
+                        <h2 class="text-3xl font-bold text-white mb-2 border-l-4 border-purple-500 pl-3">Central de Prática</h2>
+                        <p class="text-slate-400">Filtre, ordene e resolva suas questões focando onde você mais precisa.</p>
+                    </div>
+                    <div class="bg-purple-900/30 border border-purple-700/60 rounded-xl px-5 py-3 min-w-[170px] text-center shadow">
+                        <div class="text-[10px] uppercase tracking-wider text-purple-300 font-bold">Tempo nesta prática</div>
+                        <div id="practice-time-counter" class="text-2xl font-mono font-bold text-white mt-1">00:00</div>
+                    </div>
                 </div>
 
                 <!-- Painel de Filtros -->
