@@ -1759,7 +1759,7 @@
                                 </div>
                                 <div class="sm:w-2/3">
                                     <label class="block text-xs text-slate-400 mb-1">${q.type === 'flashcard' ? 'Frente do Cartão (Pergunta/Conceito)' : 'Pergunta'}</label>
-                                    <input type="text" value="${q.question}" onchange="updateQuestionField(${qId}, 'question', this.value)" placeholder="Digite aqui..." class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm focus:border-blue-500">
+                                    <textarea rows="3" onchange="updateQuestionField(${qId}, 'question', this.value)" placeholder="Digite aqui... Use Shift+Enter para pular linha" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm resize-y focus:outline-none focus:border-blue-500">${q.question || ''}</textarea>
                                 </div>
                             </div>
                             ${bodyHtml}
