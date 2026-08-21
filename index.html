@@ -10,7 +10,2702 @@
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0f172a; /* bg-slate-900 */<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minha Central de Estudos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #0f172a; /* bg-slate-900 */
+            color: #f8fafc; /* text-slate-50 */
+            background-position: center;
+            background-size: cover;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+        }
+        
+        .novel-card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        
+        .novel-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.25);
+        }
+
+        .home-organize-mode .novel-card {
+            cursor: grab;
+            border-color: #475569;
+        }
+        .home-organize-mode .novel-card:active {
+            cursor: grabbing;
+        }
+        .home-organize-mode .novel-card.dragging {
+            opacity: .45;
+            transform: scale(.98);
+        }
+        .home-organize-mode .novel-card.drag-over {
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 2px rgba(96,165,250,.25);
+        }
+
+        .chapter-list-item {
+            transition: background-color 0.2s;
+        }
+
+        .chapter-list-item:hover {
+            background-color: #334155; /* bg-slate-700 */
+        }
+        
+        .modal-bg {
+            background-color: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(4px);
+        }
+
+        #editor-container {
+            min-height: 200px;
+        }
+        
+        .practice-filter-drawer { border: 1px solid #475569; border-radius: .5rem; background: #0f172a; overflow: hidden; }
+        .practice-filter-drawer > button { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .55rem .7rem; color: #cbd5e1; font-size: .75rem; font-weight: 600; text-align: left; transition: background-color .2s, color .2s; }
+        .practice-filter-drawer > button:hover { background: #1e293b; color: #fff; }
+        .practice-filter-drawer .drawer-chevron { transition: transform .2s; }
+        .practice-filter-drawer.open .drawer-chevron { transform: rotate(180deg); }
+        .practice-filter-drawer .drawer-body { border-top: 1px solid #334155; padding: .5rem; background: #0b1220; }
+        .practice-filter-drawer .drawer-body.hidden { display: none; }
+        .editor-toolbar button, .editor-toolbar input[type="color"], .editor-toolbar select {
+            margin-right: 0.5rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #334155;
+            color: #e2e8f0;
+            border: 1px solid #475569;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .editor-toolbar button:hover, .editor-toolbar select:hover {
+            background-color: #475569;
+        }
+        
+        #editor-content {
+            min-height: 250px;
+            outline: none;
+        }
+        
+        #editor-content p {
+            margin-bottom: 1em;
+        }
+
+        .flashcard {
+            perspective: 1000px;
+        }
+        .flashcard-inner {
+            position: relative;
+            width: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            min-height: 150px;
+        }
+        .flashcard.flipped .flashcard-inner {
+            transform: rotateY(180deg);
+        }
+        .flashcard-front, .flashcard-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+        }
+        .flashcard-back {
+            transform: rotateY(180deg);
+        }
+        
+
+        /* =========================================================
+           FILTROS — CENTRAL DE PRÁTICA
+           Visual uniforme, compacto e consistente
+           ========================================================= */
+        .practice-filters {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.75rem;
+            align-items: end;
+        }
+
+        .practice-filter-group {
+            min-width: 0;
+        }
+
+        .practice-filter-label {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            margin-bottom: 0.4rem;
+            color: #94a3b8;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .practice-filter-control {
+            width: 100%;
+            min-height: 42px;
+            appearance: none;
+            -webkit-appearance: none;
+            background-color: #1e293b;
+            border: 1px solid #475569;
+            border-radius: 0.65rem;
+            color: #f8fafc;
+            padding: 0.65rem 2.4rem 0.65rem 0.85rem;
+            font-size: 0.875rem;
+            line-height: 1.2;
+            outline: none;
+            cursor: pointer;
+            transition:
+                border-color 0.18s ease,
+                background-color 0.18s ease,
+                box-shadow 0.18s ease,
+                transform 0.18s ease;
+        }
+
+        .practice-filter-control:hover {
+            background-color: #263449;
+            border-color: #64748b;
+        }
+
+        .practice-filter-control:focus {
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.12);
+        }
+
+        .practice-filter-control option {
+            background: #1e293b;
+            color: #f8fafc;
+        }
+
+        .practice-filter-select-wrap {
+            position: relative;
+        }
+
+        .practice-filter-select-wrap::after {
+            content: "\f078";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            position: absolute;
+            right: 0.85rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            pointer-events: none;
+            font-size: 0.7rem;
+        }
+
+        .practice-filter-search {
+            padding-right: 0.85rem;
+        }
+
+        .practice-filter-actions {
+            display: flex;
+            gap: 0.65rem;
+            align-items: center;
+        }
+
+        .practice-filter-button {
+            min-height: 42px;
+            border-radius: 0.65rem;
+            padding: 0.65rem 0.9rem;
+            border: 1px solid #475569;
+            background: #1e293b;
+            color: #cbd5e1;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.18s ease;
+            white-space: nowrap;
+        }
+
+        .practice-filter-button:hover {
+            background: #334155;
+            border-color: #64748b;
+            color: #fff;
+        }
+
+        .practice-filter-button.primary {
+            background: #2563eb;
+            border-color: #3b82f6;
+            color: #fff;
+        }
+
+        .practice-filter-button.primary:hover {
+            background: #1d4ed8;
+            border-color: #60a5fa;
+        }
+
+        .practice-filter-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            min-height: 30px;
+            padding: 0.35rem 0.7rem;
+            border-radius: 999px;
+            background: #172033;
+            border: 1px solid #334155;
+            color: #cbd5e1;
+            font-size: 0.75rem;
+        }
+
+        @media (max-width: 640px) {
+            .practice-filters {
+                grid-template-columns: 1fr;
+            }
+
+            .practice-filter-actions {
+                width: 100%;
+            }
+
+            .practice-filter-button {
+                flex: 1;
+            }
+        }
+
+        /* Scrollbar styling for tables */
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #1e293b; 
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #475569; 
+            border-radius: 4px;
+        }
+
+        /* Animações e UI do Streak */
+        .fire-active {
+            color: #f97316;
+            animation: pulse-fire 1.5s infinite alternate;
+        }
+        @keyframes pulse-fire {
+            0% { transform: scale(1); filter: drop-shadow(0 0 2px #f97316); }
+            100% { transform: scale(1.2); filter: drop-shadow(0 0 8px #fba918); }
+        }
+        
+        .tooltip-content {
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+        }
+        .group:hover .tooltip-content {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <nav class="bg-slate-800 p-4 shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-2 cursor-pointer" onclick="showHome()">
+                <i class="fas fa-book-open text-blue-400 text-2xl"></i>
+                <h1 class="text-2xl font-bold tracking-wider text-white">Projeto<span class="text-blue-400">Delta Δ</span></h1>
+            </div>
+            <div class="hidden md:flex space-x-6 items-center">
+                <button onclick="showHome()" class="hover:text-blue-400 transition-colors font-medium">Início</button>
+                <button onclick="showLibrary()" class="hover:text-blue-400 transition-colors font-medium text-slate-400">Biblioteca</button>
+                <button onclick="showQuizzes()" class="hover:text-purple-400 transition-colors font-medium text-slate-400"><i class="fas fa-brain mr-1"></i> Praticar</button>
+                <button onclick="showStats()" class="hover:text-blue-400 transition-colors font-medium text-slate-400">Estatísticas</button>
+            </div>
+            
+            <div class="flex items-center space-x-3">
+                <!-- Streak Dropdown UI -->
+                <div class="relative group cursor-pointer flex items-center hidden md:flex">
+                    <div id="streak-indicator" class="flex items-center space-x-1 text-slate-500 font-bold px-3 py-1.5 rounded-full bg-slate-900 border border-slate-700 transition-colors">
+                        <i id="streak-icon" class="fas fa-fire"></i>
+                        <span id="streak-count">0</span>
+                    </div>
+                    <!-- Tooltip Container -->
+                    <div class="tooltip-content absolute right-0 top-full mt-2 w-64 bg-slate-800 rounded-xl shadow-2xl border border-slate-600 p-4 z-50">
+                        <div class="text-center border-b border-slate-700 pb-2 mb-3">
+                            <h4 class="text-white font-bold">Atividade de Leitura</h4>
+                            <p class="text-xs text-slate-400">Meta Diária: <span id="tt-streak-goal">30 minutos</span></p>
+                        </div>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between text-slate-300"><span>Sequência Atual:</span> <strong class="text-white" id="tt-streak">0 dias</strong></div>
+                            <div class="flex justify-between text-slate-300"><span>Maior Sequência:</span> <strong class="text-white" id="tt-highest-streak">0 dias</strong></div>
+                            <div class="flex justify-between text-slate-300"><span>Dias Visitados:</span> <strong class="text-white" id="tt-days-visited">0</strong></div>
+                            <div class="flex justify-between text-slate-300 border-t border-slate-700 pt-2 mt-2"><span>Tempo Hoje:</span> <strong class="text-blue-400" id="tt-time-today">0m</strong></div>
+                            <div class="flex justify-between text-slate-300"><span>Tempo Total:</span> <strong class="text-white" id="tt-time-total">0h 0m</strong></div>
+                            <div class="flex justify-between text-slate-300"><span>Tempo Turno:</span> <strong class="text-emerald-400" id="tt-time-turn">0h 0m</strong></div>
+                            <div class="flex justify-between text-slate-300"><span>Tempo Mês:</span> <strong class="text-purple-400" id="tt-time-month">0h 0m</strong></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex space-x-2 border-l border-slate-700 pl-3">
+                    <button onclick="openSettings()" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-md font-medium transition-colors shadow-md flex items-center" title="Configurações"><i class="fas fa-cog"></i></button>
+                    <button onclick="exportData()" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-md font-medium transition-colors shadow-md flex items-center" title="Exportar Backup">
+                        <i class="fas fa-download"></i>
+                    </button>
+                    <label for="import-file" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-md font-medium transition-colors shadow-md flex items-center cursor-pointer" title="Importar Backup">
+                        <i class="fas fa-upload"></i>
+                    </label>
+                    <input type="file" id="import-file" class="hidden" accept=".json" onchange="importData(event)">
+
+                    <button onclick="openPostModal()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-md font-medium transition-colors shadow-md flex items-center space-x-2">
+                        <i class="fas fa-plus"></i>
+                        <span class="hidden sm:inline">Nova Postagem</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow container mx-auto p-4 md:p-8" id="app-content">
+        <!-- Conteúdo injetado via JavaScript -->
+    </main>
+
+    <footer class="bg-slate-900 border-t border-slate-800 p-6 mt-auto">
+        <div class="container mx-auto text-center text-slate-400">
+            <p>&copy; 2026 Projeto Delta. Plataforma de Estudo Pessoal - João Lucas D'Agostini Marques.</p>
+        </div>
+    </footer>
+
+    <div id="settings-modal" class="fixed inset-0 modal-bg hidden z-[60] flex items-center justify-center p-4">
+        <div class="bg-slate-800 rounded-lg shadow-xl w-full max-w-lg border border-slate-700">
+            <div class="flex justify-between items-center p-4 border-b border-slate-700"><div><h2 class="text-xl font-bold text-white"><i class="fas fa-cog text-blue-400 mr-2"></i>Configurações</h2><p class="text-xs text-slate-400 mt-1">Personalize o plano de fundo.</p></div><button onclick="closeSettings()" class="text-slate-400 hover:text-white"><i class="fas fa-times text-xl"></i></button></div>
+            <div class="p-6 space-y-5">
+                <div><label class="block text-sm font-medium text-slate-300 mb-2">Cor de fundo</label><div class="flex gap-3 items-center"><input type="color" id="settings-bg-color" value="#0f172a" class="w-14 h-10 p-1 bg-slate-900 border border-slate-600 rounded cursor-pointer" onchange="previewBackgroundColor(this.value)"><input type="text" id="settings-bg-color-text" value="#0f172a" maxlength="7" class="flex-1 bg-slate-900 border border-slate-600 rounded-md p-2 text-white uppercase" onchange="setBackgroundColorFromText()"></div></div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Meta diária do Streak</label>
+                    <div class="flex items-center gap-3">
+                        <input type="number" id="settings-streak-goal" min="1" max="1440" step="1"
+                            class="w-full bg-slate-900 border border-slate-600 rounded-md p-2 text-white outline-none focus:border-blue-500"
+                            placeholder="30">
+                        <span class="text-sm text-slate-400 whitespace-nowrap">minutos</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-2">
+                        Tempo ativo necessário por dia para completar a meta e manter o Streak.
+                    </p>
+                </div>
+
+                <div><label class="block text-sm font-medium text-slate-300 mb-2">Imagem de fundo</label><div class="border-2 border-dashed border-slate-600 rounded-lg p-4 text-center"><input type="file" id="settings-bg-image" accept="image/*" class="hidden" onchange="handleBackgroundImage(event)"><label for="settings-bg-image" class="inline-flex items-center bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-md cursor-pointer"><i class="fas fa-image mr-2"></i>Escolher imagem</label><p id="settings-bg-image-name" class="text-xs text-slate-500 mt-2">Nenhuma imagem selecionada</p></div></div>
+                <div class="flex items-center justify-between bg-slate-900/70 rounded-lg p-3 border border-slate-700"><div><p class="text-sm font-medium text-white">Usar imagem como fundo</p><p class="text-xs text-slate-500">A imagem será incluída no backup.</p></div><input type="checkbox" id="settings-bg-image-enabled" class="w-5 h-5" onchange="applySavedBackgroundSettings()"></div>
+                <div class="flex gap-2"><button onclick="clearBackgroundImage()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-md">Remover imagem</button><button onclick="saveSettings()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-md font-medium">Salvar</button></div>
+                 <div class="border-t border-red-900/50 pt-4"><button onclick="openResetStatsConfirm()" class="w-full bg-red-900/30 hover:bg-red-900/50 border border-red-700/60 text-red-300 px-4 py-2 rounded-md font-medium"><i class="fas fa-trash-alt mr-2"></i>Resetar todas as estatísticas</button><p class="text-xs text-slate-500 mt-2">Zera tempos, respostas, streaks e históricos. As matérias e capítulos permanecem.</p></div>
+                <p class="text-xs text-slate-500 border-t border-slate-700 pt-3">O backup inclui matéria, capítulos, questões, comentários, respostas, tempos de leitura, sequências, estatísticas e configurações.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="reset-stats-modal" class="fixed inset-0 modal-bg hidden z-[80] flex items-center justify-center p-4">
+        <div class="bg-slate-800 rounded-xl shadow-2xl w-full max-w-md border border-red-800/60">
+            <div class="p-5 border-b border-slate-700 flex items-center justify-between"><h3 class="text-lg font-bold text-white"><i class="fas fa-triangle-exclamation text-red-400 mr-2"></i>Resetar estatísticas?</h3><button onclick="closeResetStatsConfirm()" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button></div>
+            <div class="p-5"><p class="text-slate-300 text-sm leading-relaxed">Esta ação apagará permanentemente <strong class="text-white">horas de estudo, respostas, streaks e históricos</strong>. As matérias e capítulos não serão removidos.</p><p class="text-red-300 text-xs mt-3">O primeiro dia do próximo turno de 10 dias será hoje.</p></div>
+            <div class="p-5 pt-0 flex gap-3"><button onclick="closeResetStatsConfirm()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-md">Cancelar</button><button onclick="resetAllStatistics()" class="flex-1 bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-md font-bold">Sim, resetar</button></div>
+        </div>
+    </div>
+
+    <div id="post-modal" class="fixed inset-0 modal-bg hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-800 rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto border border-slate-700">
+            <div class="flex justify-between items-center p-4 border-b border-slate-700 sticky top-0 bg-slate-800 z-10">
+                <h2 id="modal-title" class="text-xl font-bold text-white">O que você deseja postar?</h2>
+                <button onclick="closePostModal()" class="text-slate-400 hover:text-white transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="p-6">
+                <div class="flex border-b border-slate-700 mb-6">
+                    <button id="tab-novel" onclick="switchTab('novel')" class="px-4 py-2 border-b-2 border-blue-500 text-blue-400 font-medium">Nova Matéria</button>
+                    <button id="tab-chapter" onclick="switchTab('chapter')" class="px-4 py-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 font-medium transition-colors">Novo Capítulo</button>
+                </div>
+
+                <form id="form-new-novel" onsubmit="handleNewNovel(event)">
+                    <!-- ... Campos existentes da Novel (mantidos iguais) ... -->
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Título da Matéria</label>
+                            <input type="text" id="novel-title" required class="w-full bg-slate-900 border border-slate-600 rounded-md p-2 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Gêneros (separados por vírgula)</label>
+                            <input type="text" id="novel-genres" placeholder="Direito, Gerais, Lei..." required class="w-full bg-slate-900 border border-slate-600 rounded-md p-2 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Capa da Matéria <span class="text-xs text-slate-500">(opcional)</span></label>
+                            <div class="flex space-x-2 mb-2">
+                                <button type="button" onclick="setCoverMode('url')" id="btn-cover-url" class="px-3 py-1 bg-blue-600 text-white rounded-md text-sm">Usar URL</button>
+                                <button type="button" onclick="setCoverMode('upload')" id="btn-cover-upload" class="px-3 py-1 bg-slate-700 text-slate-300 rounded-md text-sm">Fazer Upload</button>
+                            </div>
+                            <input type="url" id="novel-cover-url" placeholder="https://..." class="w-full bg-slate-900 border border-slate-600 rounded-md p-2 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                            <div id="upload-container" class="hidden relative border-2 border-dashed border-slate-600 rounded-md p-4 text-center">
+                                <input type="file" id="novel-cover-upload" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="previewImage(event)">
+                                <div id="upload-placeholder">
+                                    <i class="fas fa-image text-3xl text-slate-500 mb-2"></i>
+                                    <p class="text-sm text-slate-400">Clique ou arraste uma imagem aqui</p>
+                                </div>
+                                <img id="cover-preview" src="" class="hidden mx-auto h-32 object-contain mt-2 rounded">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Sinopse</label>
+                            <textarea id="novel-synopsis" rows="4" required class="w-full bg-slate-900 border border-slate-600 rounded-md p-2 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"></textarea>
+                        </div>
+                        <button type="submit" id="submit-novel-btn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-md transition-colors">Criar Matéria</button>
+                    </div>
+                </form>
+
+                <!-- Formulário Novo Capítulo COM QUIZ -->
+                <form id="form-new-chapter" class="hidden" onsubmit="handleNewChapter(event)">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Selecione a Matéria</label>
+                            <select id="chapter-novel-select" required class="w-full bg-slate-900 border border-slate-600 rounded-md p-2 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Número/Título do Capítulo</label>
+                            <input type="text" id="chapter-title" required class="w-full bg-slate-900 border border-slate-600 rounded-md p-2 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="block text-sm font-medium text-slate-300">Conteúdo do Capítulo</label>
+                                <button type="button" id="toggle-chapter-content-btn" onclick="toggleChapterContentEditor()" class="text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-1.5 rounded-md border border-slate-600 transition-colors flex items-center gap-2" title="Ocultar conteúdo do capítulo">
+                                    <i class="fas fa-chevron-up"></i><span>Ocultar conteúdo</span>
+                                </button>
+                            </div>
+                            <div id="editor-container" class="w-full bg-slate-900 border border-slate-600 rounded-md flex flex-col">
+                                <!-- Barra de ferramentas -->
+                                <div class="editor-toolbar bg-slate-800 p-2 border-b border-slate-600 flex flex-wrap gap-2 items-center rounded-t-md">
+                                    <button type="button" onclick="formatText('bold')" title="Negrito"><i class="fas fa-bold"></i></button>
+                                    <button type="button" onclick="formatText('italic')" title="Itálico"><i class="fas fa-italic"></i></button>
+                                    <button type="button" onclick="formatText('underline')" title="Sublinhado"><i class="fas fa-underline"></i></button>
+                                    <div class="h-6 w-px bg-slate-600 mx-1"></div>
+                                    <button type="button" onclick="formatText('justifyLeft')" title="Alinhar à Esquerda"><i class="fas fa-align-left"></i></button>
+                                    <button type="button" onclick="formatText('justifyCenter')" title="Centralizar"><i class="fas fa-align-center"></i></button>
+                                    <button type="button" onclick="formatText('justifyRight')" title="Alinhar à Direita"><i class="fas fa-align-right"></i></button>
+                                    <div class="h-6 w-px bg-slate-600 mx-1"></div>
+                                    <input type="color" oninput="formatText('foreColor', this.value)" title="Cor do Texto" class="w-8 h-8 p-0 border-0 rounded cursor-pointer bg-slate-700">
+                                    <select onchange="formatText('fontName', this.value)" title="Fonte do Texto" class="text-sm outline-none">
+                                        <option value="" disabled selected>Fonte</option>
+                                        <option value="Arial, sans-serif">Arial</option>
+                                        <option value="Georgia, serif">Georgia</option>
+                                        <option value="Courier New, monospace">Courier</option>
+                                        <option value="Times New Roman, serif">Times New Roman</option>
+                                        <option value="Verdana, sans-serif">Verdana</option>
+                                    </select>
+                                    <select onchange="formatText('fontSize', this.value)" title="Tamanho da Fonte" class="text-sm outline-none">
+                                        <option value="" disabled selected>Tamanho</option>
+                                        <option value="1">1 (Pequeno)</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3 (Normal)</option>
+                                        <option value="4">4</option>
+                                        <option value="5">5 (Grande)</option>
+                                        <option value="6">6</option>
+                                        <option value="7">7 (Enorme)</option>
+                                    </select>
+                                </div>
+                                <div id="chapter-content" contenteditable="true" class="p-4 flex-grow text-white overflow-y-auto focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 rounded-b-md" style="min-height: 200px;"></div>
+                            </div>
+                        </div>
+
+                        <!-- SALVAR ALTERAÇÕES ANTES DAS QUESTÕES -->
+                        <div class="flex justify-end mt-6 mb-4">
+                            <button type="submit"
+                                class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-5 py-2.5 rounded-md transition-colors shadow-lg flex items-center">
+                                <i class="fas fa-save mr-2"></i> Salvar Alterações
+                            </button>
+                        </div>
+
+                        <!-- SESSÃO DE QUIZ -->
+                        <div class="border-t border-slate-600 pt-4 mt-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <div>
+                                    <h3 class="text-lg font-bold text-white flex items-center">
+                                        <i class="fas fa-brain text-blue-500 mr-2"></i> Questões do Capítulo
+                                    </h3>
+                                    <p class="text-xs text-slate-400">Teste de conhecimento após a leitura.</p>
+                                </div>
+                                
+                            </div>
+                            
+                            <!-- Container onde as questões serão listadas durante a edição -->
+                            <div id="quiz-editor-container" class="space-y-4">
+                                <!-- Questões dinâmicas renderizadas aqui -->
+                            </div>
+
+                            <!-- NOVA QUESTÃO: abaixo do último card -->
+                            <div class="flex justify-center mt-5">
+                                <button type="button" onclick="addQuizQuestion()"
+                                    class="bg-slate-700 hover:bg-slate-600 text-white px-5 py-2.5 rounded-md text-sm transition-colors border border-slate-500 flex items-center shadow">
+                                    <i class="fas fa-plus mr-2"></i> Nova Questão
+                                </button>
+                            </div>
+                        </div>
+
+                        <button type="submit" id="submit-chapter-btn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-md transition-colors mt-6 shadow-lg text-lg">Salvar Alterações</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Banco de Dados com Novas Tabelas (questions e quizResponses)
+        let db = {
+            novels: [
+                { id: 1, title: "Língua Portuguesa", cover: "https://placehold.co/300x450/1e293b/f8fafc?text=Língua+Portuguesa", synopsis: "Estuda o funcionamento da nossa língua, incluindo suas regras, estrutura, interpretação e uso adequado na comunicação oral e escrita.", genres: ["Gerais"] }
+            ],
+            chapters: [
+                { novelId: 1, id: 1, title: "1 - Morfologia", content: "Morfologia ..............................." }
+            ],
+            questions: [
+                { 
+                    id: 1, chapterId: 1, type: 'tf', 
+                    question: "Elias era um guerreiro antes de reencarnar?", 
+                    answer: "F", // T (True/Certo) ou F (False/Errado)
+                    comment: ""
+                },
+                {
+                    id: 2, chapterId: 1, type: 'mc',
+                    question: "Onde o sangue manchava o chão no início do capítulo?",
+                    options: { A: "Numa caverna", B: "No castelo de gelo", C: "No chão de mármore do palácio", D: "Na floresta sombria", E: "Em um navio" },
+                    answer: "C",
+                    comment: ""
+                },
+                {
+                    id: 3, chapterId: 1, type: 'flashcard',
+                    question: "Qual o nome do protagonista?",
+                    answer: "Elias, o mago.",
+                    comment: ""
+                }
+            ],
+            quizResponses: [
+                // Mock data para as estatísticas funcionarem de imediato
+                { id: 1, questionId: 1, chapterId: 1, novelId: 1, isCorrect: true, date: new Date().toISOString() },
+                { id: 2, questionId: 2, chapterId: 1, novelId: 1, isCorrect: true, date: new Date().toISOString() },
+                { id: 3, questionId: 3, chapterId: 1, novelId: 1, isCorrect: false, date: new Date().toISOString() },
+                { id: 4, questionId: 1, chapterId: 1, novelId: 1, isCorrect: false, date: new Date().toISOString() }
+            ],
+            userStats: {
+                totalDaysVisited: 0,
+                firstAccess: null,
+                lastDateActive: null,
+                currentStreak: 0,
+                highestStreak: 0,
+                totalActiveTime: 0, // armazenado em segundos
+                todayActiveTime: 0,
+                goalReachedToday: false,
+                timeByNovel: {},
+                timeByChapter: {},
+                dailyTimeHistory: {},
+                turnStartDate: null
+            },
+            settings: { backgroundColor: "#0f172a", backgroundImage: "", backgroundImageEnabled: false, streakGoalMinutes: 30, homeOrder: [], cycleReadNovelId: null, lastReadAtByNovel: {} }
+        };
+
+        let currentChapterQuestions = []; // Array temporário para o editor de quiz
+        let expandedQuizEditorQuestions = new Set(); // Questões abertas no editor
+
+        // =========================================================
+        // BACKUP COMPLETO + INTEGRIDADE + CONFIGURAÇÕES
+        // =========================================================
+        const BACKUP_VERSION = 2;
+        const STORAGE_KEY = "minhasNovelsData";
+
+        function defaultSettings(){ return {backgroundColor:"#0f172a",backgroundImage:"",backgroundImageEnabled:false,streakGoalMinutes:30,homeOrder:[],cycleReadNovelId:null,lastReadAtByNovel:{}}; }
+        function loadSavedData(){
+            try{
+                const saved=localStorage.getItem(STORAGE_KEY);
+                if(saved){
+                    const parsed=JSON.parse(saved);
+                    db=normalizeDatabase(parsed);
+                } else {
+                    db=normalizeDatabase(db);
+                    saveToLocal();
+                }
+            }catch(err){
+                console.error("Falha ao carregar dados locais:",err);
+                db=normalizeDatabase(db);
+            }
+            applySavedBackgroundSettings();
+            checkDailyReset();
+            updateStreakUI();
+        }
+        function normalizeDatabase(data){
+            const u={totalDaysVisited:0,firstAccess:null,lastDateActive:null,currentStreak:0,highestStreak:0,totalActiveTime:0,todayActiveTime:0,goalReachedToday:false,timeByNovel:{},timeByChapter:{},dailyTimeHistory:{},turnStartDate:null,practiceTime:0};
+            return {novels:Array.isArray(data?.novels)?data.novels:[],chapters:Array.isArray(data?.chapters)?data.chapters:[],questions:Array.isArray(data?.questions)?data.questions.map(q=>({...q,comment:q.comment||""})):[],quizResponses:Array.isArray(data?.quizResponses)?data.quizResponses:[],userStats:{...u,...(data?.userStats||{}),practiceTime:(data?.userStats?.practiceTime||0),timeByNovel:{...(data?.userStats?.timeByNovel||{})},timeByChapter:{...(data?.userStats?.timeByChapter||{})},dailyTimeHistory:{...(data?.userStats?.dailyTimeHistory||{})},turnStartDate:data?.userStats?.turnStartDate||data?.userStats?.firstAccess||null},settings:{...defaultSettings(),...(data?.settings||{}),streakGoalMinutes:Math.max(1,Number(data?.settings?.streakGoalMinutes)||30),homeOrder:Array.isArray(data?.settings?.homeOrder)?data.settings.homeOrder:[],cycleReadNovelId:data?.settings?.cycleReadNovelId ?? null,lastReadAtByNovel:{...(data?.settings?.lastReadAtByNovel||{})}}};
+        }
+        function stableSerialize(v){ if(v===null||typeof v!=="object") return JSON.stringify(v); if(Array.isArray(v)) return "["+v.map(stableSerialize).join(",")+"]"; return "{"+Object.keys(v).sort().map(k=>JSON.stringify(k)+":"+stableSerialize(v[k])).join(",")+"}"; }
+        function simpleChecksum(t){let h=2166136261;for(let i=0;i<t.length;i++){h^=t.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0).toString(16).padStart(8,"0");}
+        async function checksum(t){if(window.crypto?.subtle&&window.TextEncoder){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t));return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,"0")).join("");}return simpleChecksum(t);}
+        function saveToLocal(){ localStorage.setItem(STORAGE_KEY,JSON.stringify(db)); }
+        function buildBackup(){ return {backupVersion:BACKUP_VERSION,application:"Projeto Delta",exportedAt:new Date().toISOString(),data:JSON.parse(JSON.stringify(normalizeDatabase(db)))}; }
+        async function exportData(){
+            try{saveToLocal();const backup=buildBackup();backup.integrity={algorithm:window.crypto?.subtle?"SHA-256":"FNV-1a-32",checksum:await checksum(stableSerialize(backup.data))};const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`projeto-delta-backup-${new Date().toISOString().replace(/[:.]/g,"-")}.json`;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);showNotification("Backup completo exportado com sucesso!");}catch(e){console.error(e);showNotification("Erro ao exportar backup.",true);}
+        }
+        async function importData(event){
+            const file=event.target.files[0];
+            if(!file)return;
+            const reader=new FileReader();
+            reader.onload=async e=>{
+                try{
+                    const raw=JSON.parse(e.target.result);
+                    // Compatível com backups novos e antigos: aceita data/database/db ou o próprio objeto.
+                    const data=(raw&&raw.data&&typeof raw.data==='object')?raw.data:
+                               (raw&&raw.database&&typeof raw.database==='object')?raw.database:
+                               (raw&&raw.db&&typeof raw.db==='object')?raw.db:raw;
+                    const modern=!!(raw&&raw.data&&raw.backupVersion);
+                    if(!data||!Array.isArray(data.novels)||!Array.isArray(data.chapters)){
+                        throw new Error("Estrutura do backup inválida: matérias ou capítulos não encontrados.");
+                    }
+                    // Backups antigos podem não ter questions/quizResponses; normalizeDatabase os completa.
+                    if(modern&&raw.integrity?.checksum){
+                        const got=await checksum(stableSerialize(data));
+                        if(got!==raw.integrity.checksum)throw new Error("Falha na integridade: arquivo corrompido ou alterado.");
+                    }
+                    db=normalizeDatabase(data);
+                    applySavedBackgroundSettings();
+                    saveToLocal();
+                    checkDailyReset();
+                    updateStreakUI();
+                    showHome();
+                    showNotification(`Backup importado com sucesso${modern?" e verificado":""}.`);
+                }catch(err){
+                    console.error(err);
+                    showNotification(`Backup não importado: ${err.message}`,true);
+                }finally{
+                    event.target.value="";
+                }
+            };
+            reader.onerror=()=>{ event.target.value=""; showNotification("Não foi possível ler o arquivo de backup.",true); };
+            reader.readAsText(file);
+        }
+
+        // =========================================================
+        // CONFIGURAÇÕES DE APARÊNCIA
+        // =========================================================
+        function ensureSettings(){if(!db.settings)db.settings=defaultSettings();return db.settings;}
+        function openSettings(){loadSettingsIntoForm();document.getElementById("settings-modal").classList.remove("hidden");}
+        function closeSettings(){document.getElementById("settings-modal").classList.add("hidden");}
+        function loadSettingsIntoForm(){
+            const x=ensureSettings();
+            document.getElementById("settings-bg-color").value=x.backgroundColor||"#0f172a";
+            document.getElementById("settings-bg-color-text").value=x.backgroundColor||"#0f172a";
+            document.getElementById("settings-bg-image-enabled").checked=!!x.backgroundImageEnabled;
+            document.getElementById("settings-bg-image-name").textContent=x.backgroundImage?"Imagem salva no sistema":"Nenhuma imagem selecionada";
+            const streakGoal=document.getElementById("settings-streak-goal");
+            if(streakGoal) streakGoal.value=Math.max(1,Number(x.streakGoalMinutes)||30);
+        }
+        function previewBackgroundColor(v){ensureSettings().backgroundColor=v;document.getElementById("settings-bg-color-text").value=v;applySavedBackgroundSettings();}
+        function setBackgroundColorFromText(){let v=document.getElementById("settings-bg-color-text").value.trim();if(!/^#[0-9a-fA-F]{6}$/.test(v)){showNotification("Use uma cor no formato #RRGGBB.",true);loadSettingsIntoForm();return;}document.getElementById("settings-bg-color").value=v;previewBackgroundColor(v);}
+        function applySavedBackgroundSettings(){const x=ensureSettings();document.body.style.backgroundColor=x.backgroundColor||"#0f172a";if(x.backgroundImage&&x.backgroundImageEnabled){document.body.style.backgroundImage=`linear-gradient(rgba(15,23,42,.35),rgba(15,23,42,.35)),url("${x.backgroundImage}")`;}else document.body.style.backgroundImage="none";}
+        function handleBackgroundImage(e){const f=e.target.files[0];if(!f)return;if(!f.type.startsWith("image/")){showNotification("Selecione uma imagem válida.",true);return;}const r=new FileReader();r.onload=ev=>{ensureSettings().backgroundImage=ev.target.result;ensureSettings().backgroundImageEnabled=true;document.getElementById("settings-bg-image-enabled").checked=true;document.getElementById("settings-bg-image-name").textContent=f.name;applySavedBackgroundSettings();};r.readAsDataURL(f);}
+        function clearBackgroundImage(){ensureSettings().backgroundImage="";ensureSettings().backgroundImageEnabled=false;document.getElementById("settings-bg-image-enabled").checked=false;document.getElementById("settings-bg-image-name").textContent="Nenhuma imagem selecionada";applySavedBackgroundSettings();}
+        function openResetStatsConfirm(){ document.getElementById('reset-stats-modal')?.classList.remove('hidden'); }
+        function closeResetStatsConfirm(){ document.getElementById('reset-stats-modal')?.classList.add('hidden'); }
+        function resetAllStatistics(){
+            const now=new Date(); const iso=now.toISOString(); const today=localDateKey(now);
+            db.userStats={totalDaysVisited:1,firstAccess:iso,lastDateActive:today,currentStreak:0,highestStreak:0,totalActiveTime:0,todayActiveTime:0,goalReachedToday:false,timeByNovel:{},timeByChapter:{},dailyTimeHistory:{},turnStartDate:iso,practiceTime:0};
+            const settings=ensureSettings(); settings.cycleReadNovelId=null; settings.lastReadAtByNovel={};
+            db.quizResponses=[];
+            saveToLocal(); checkDailyReset(); updateStreakUI(); closeResetStatsConfirm(); closeSettings();
+            showNotification('Estatísticas resetadas. O novo turno de 10 dias começa hoje.');
+            if(currentView==='stats') showStats();
+        }
+
+        function saveSettings(){
+            const settings=ensureSettings();
+            const streakInput=document.getElementById("settings-streak-goal");
+            const streakMinutes=Math.floor(Number(streakInput?.value));
+            if(!Number.isFinite(streakMinutes) || streakMinutes < 1 || streakMinutes > 1440){
+                showNotification("A meta diária do Streak deve estar entre 1 e 1440 minutos.",true);
+                return;
+            }
+            settings.backgroundColor=document.getElementById("settings-bg-color").value;
+            settings.backgroundImageEnabled=document.getElementById("settings-bg-image-enabled").checked;
+            settings.streakGoalMinutes=streakMinutes;
+            saveToLocal();
+            applySavedBackgroundSettings();
+            updateStreakUI();
+            closeSettings();
+            showNotification("Configurações salvas.");
+        }
+
+        // ==========================================
+        // SISTEMA DE RASTREAMENTO E CHECK-IN DIÁRIO
+        // ==========================================
+        let idleTimer = 0;
+        const MAX_IDLE_TIME = 180; // Pausa após 3 minutos sem interação
+        let isTabActive = !document.hidden;
+
+        // Limpa o timer de ociosidade caso haja evento na tela
+        const resetIdleTimer = () => { idleTimer = 0; };
+        ['mousemove', 'keydown', 'scroll', 'click', 'touchstart'].forEach(evt => 
+            window.addEventListener(evt, resetIdleTimer, { passive: true })
+        );
+
+        // API de Visibilidade: Para rastreamento ao sair da aba
+        document.addEventListener('visibilitychange', () => {
+            isTabActive = !document.hidden;
+            if (!isTabActive) saveToLocal(); // Backup ao focar em outra janela
+        });
+
+        function formatTime(seconds) {
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            return h > 0 ? `${h}h ${m}m` : `${m}m`;
+        }
+
+        function formatTimeLong(seconds) {
+            const s = Math.max(0, Math.floor(seconds || 0));
+            const h = Math.floor(s / 3600);
+            const m = Math.floor((s % 3600) / 60);
+            const sec = s % 60;
+            return h > 0
+                ? `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`
+                : `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+        }
+
+        function getNovelTime(novelId) {
+            return (db.userStats?.timeByNovel?.[novelId] || 0);
+        }
+
+        function getChapterTime(chapterId) {
+            return (db.userStats?.timeByChapter?.[chapterId] || 0);
+        }
+
+        function getCoverUrl(cover) {
+            return cover || 'https://placehold.co/300x450/1e293b/f8fafc?text=Sem+Capa';
+        }
+
+        function localDateKey(date=new Date()) {
+            const y=date.getFullYear();
+            const m=String(date.getMonth()+1).padStart(2,'0');
+            const d=String(date.getDate()).padStart(2,'0');
+            return `${y}-${m}-${d}`;
+        }
+        function dateFromKey(key){ const [y,m,d]=String(key).split('-').map(Number); return new Date(y,m-1,d); }
+        function diffDays(a,b){ return Math.floor((dateFromKey(b)-dateFromKey(a))/86400000); }
+        function ensureTimeHistory(){
+            if(!db.userStats) db.userStats={};
+            if(!db.userStats.dailyTimeHistory) db.userStats.dailyTimeHistory={};
+            if(!db.userStats.turnStartDate) db.userStats.turnStartDate=db.userStats.firstAccess||new Date().toISOString();
+        }
+        function getTurnStartKey(dateKey=localDateKey()){
+            ensureTimeHistory();
+            const anchorKey=localDateKey(new Date(db.userStats.turnStartDate));
+            const days=Math.max(0,diffDays(anchorKey,dateKey));
+            const start=dateFromKey(anchorKey);
+            start.setDate(start.getDate()+Math.floor(days/10)*10);
+            return localDateKey(start);
+        }
+        function getTurnEndKey(startKey){ const d=dateFromKey(startKey); d.setDate(d.getDate()+9); return localDateKey(d); }
+        function getTimeForDateRange(startKey,endKey,includeToday=true){
+            ensureTimeHistory(); let total=0;
+            Object.entries(db.userStats.dailyTimeHistory).forEach(([key,val])=>{if(key>=startKey&&key<=endKey) total+=Number(val)||0;});
+            const today=localDateKey();
+            if(includeToday && today>=startKey && today<=endKey) total+=Number(db.userStats.todayActiveTime)||0;
+            return total;
+        }
+        function getCurrentTurnTime(){ const start=getTurnStartKey(); return getTimeForDateRange(start,getTurnEndKey(start),true); }
+        function getCurrentMonthTime(){ const now=new Date(); const start=localDateKey(new Date(now.getFullYear(),now.getMonth(),1)); const end=localDateKey(new Date(now.getFullYear(),now.getMonth()+1,0)); return getTimeForDateRange(start,end,true); }
+        function formatDateKey(key){ const [y,m,d]=key.split('-'); return `${d}/${m}/${y.slice(2)}`; }
+        function checkDailyReset() {
+            const todayStr = localDateKey();
+            if (!db.userStats) db.userStats = {};
+            ensureTimeHistory();
+            if (!db.userStats.lastDateActive) {
+                db.userStats.firstAccess = db.userStats.firstAccess || new Date().toISOString();
+                db.userStats.turnStartDate = db.userStats.turnStartDate || db.userStats.firstAccess;
+                db.userStats.lastDateActive = todayStr;
+                db.userStats.todayActiveTime = Number(db.userStats.todayActiveTime)||0;
+                saveToLocal();
+                return;
+            }
+            if (db.userStats.lastDateActive !== todayStr) {
+                const previousKey=db.userStats.lastDateActive;
+                db.userStats.dailyTimeHistory[previousKey]=(db.userStats.dailyTimeHistory[previousKey]||0)+(Number(db.userStats.todayActiveTime)||0);
+                if (db.userStats.lastDateActive) {
+                    const yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1);
+                    const yesterdayStr = localDateKey(yesterday);
+                    if (db.userStats.lastDateActive === yesterdayStr) {
+                        if (!db.userStats.goalReachedToday) db.userStats.currentStreak=0;
+                    } else db.userStats.currentStreak=0;
+                }
+                db.userStats.lastDateActive=todayStr;
+                db.userStats.todayActiveTime=0;
+                db.userStats.goalReachedToday=false;
+                db.userStats.totalDaysVisited=(db.userStats.totalDaysVisited||0)+1;
+                saveToLocal();
+            }
+        }
+
+        function updateStreakUI() {
+            if(!db.userStats) return;
+            const streakInd=document.getElementById('streak-indicator');
+            const streakIcon=document.getElementById('streak-icon');
+            const streakCount=document.getElementById('streak-count');
+            if(!streakInd) return;
+            streakCount.innerText=db.userStats.currentStreak||0;
+            if(db.userStats.goalReachedToday){ streakIcon.classList.add('fire-active'); streakInd.classList.replace('text-slate-500','text-orange-400'); streakInd.classList.replace('border-slate-700','border-orange-500/50'); }
+            else { streakIcon.classList.remove('fire-active'); streakInd.classList.replace('text-orange-400','text-slate-500'); streakInd.classList.replace('border-orange-500/50','border-slate-700'); }
+            const set=(id,val)=>{const el=document.getElementById(id);if(el)el.innerText=val;};
+            set('tt-streak',`${db.userStats.currentStreak||0} dias`);
+            set('tt-highest-streak',`${db.userStats.highestStreak||0} dias`);
+            set('tt-days-visited',db.userStats.totalDaysVisited||0);
+            set('tt-time-today',formatTime(db.userStats.todayActiveTime||0));
+            set('tt-time-total',formatTime(db.userStats.totalActiveTime||0));
+            set('tt-time-turn',formatTime(getCurrentTurnTime()));
+            set('tt-time-month',formatTime(getCurrentMonthTime()));
+            const goalMinutes=Math.max(1,Number(ensureSettings().streakGoalMinutes)||30);
+            const goalLabel=document.getElementById('tt-streak-goal'); if(goalLabel) goalLabel.innerText=`${goalMinutes} ${goalMinutes===1?'minuto':'minutos'}`;
+        }
+
+        // Heartbeat de tracking que roda a cada 1 segundo
+        setInterval(() => {
+            checkDailyReset(); // Garante o reset na virada da noite (00:00)
+            
+            if (isTabActive && idleTimer < MAX_IDLE_TIME) {
+                idleTimer++;
+                db.userStats.totalActiveTime = (db.userStats.totalActiveTime || 0) + 1;
+                db.userStats.todayActiveTime = (db.userStats.todayActiveTime || 0) + 1;
+
+                // Rastreamento Contextual Específico
+                if (activeNovelId) {
+                    if(!db.userStats.timeByNovel) db.userStats.timeByNovel = {};
+                    db.userStats.timeByNovel[activeNovelId] = (db.userStats.timeByNovel[activeNovelId] || 0) + 1;
+                }
+                if (activeChapterId) {
+                    if(!db.userStats.timeByChapter) db.userStats.timeByChapter = {};
+                    db.userStats.timeByChapter[activeChapterId] = (db.userStats.timeByChapter[activeChapterId] || 0) + 1;
+                }
+
+                // Contador da Central de Prática.
+                // É um contador de sessão visível e também fica salvo no backup como tempo total de prática.
+                if (currentView === 'practice') {
+                    practiceSessionSeconds++;
+                    db.userStats.practiceTime = (db.userStats.practiceTime || 0) + 1;
+                    const practiceTimer = document.getElementById('practice-time-counter');
+                    if (practiceTimer) practiceTimer.textContent = formatTimeLong(practiceSessionSeconds);
+                }
+
+                // Check Meta Diária configurável.
+                const streakGoalSeconds = Math.max(1, Number(ensureSettings().streakGoalMinutes) || 30) * 60;
+                if (db.userStats.todayActiveTime >= streakGoalSeconds && !db.userStats.goalReachedToday) {
+                    db.userStats.goalReachedToday = true;
+                    db.userStats.currentStreak = (db.userStats.currentStreak || 0) + 1;
+                    
+                    if (db.userStats.currentStreak > (db.userStats.highestStreak || 0)) {
+                        db.userStats.highestStreak = db.userStats.currentStreak;
+                    }
+                    
+                    showNotification("🔥 Meta diária concluída! Você manteve sua sequência ativa hoje.");
+                    saveToLocal();
+                }
+
+                // Atualizar Tooltip a cada 5 segundos
+                if (db.userStats.todayActiveTime % 5 === 0) updateStreakUI();
+                
+                // Backup rotineiro a cada minuto de leitura
+                if (db.userStats.todayActiveTime % 60 === 0) saveToLocal();
+            }
+        }, 1000);
+        // ==========================================
+
+
+        // Variáveis de controle
+        const appContent = document.getElementById('app-content');
+        let editingNovelId = null;
+        let editingChapterId = null;
+        let activeNovelId = null;
+        let activeChapterId = null;
+        let currentView = 'home';
+        let practiceSessionSeconds = 0;
+        let myChartInstance1 = null;
+        let myChartInstance2 = null;
+        let chapterQuizState = {};
+        let practiceQuizState = { index: 0, order: [], ids: [] };
+
+        function setActiveNav(navName) {
+            // Remove highlighting logic for simplicity, handled by hover states
+        }
+
+        function getHomeOrderedNovels() {
+            const ids = Array.isArray(db.settings?.homeOrder) ? db.settings.homeOrder : [];
+            const byId = new Map(db.novels.map(n => [n.id, n]));
+            const ordered = [];
+            ids.forEach(id => {
+                const n = byId.get(Number(id));
+                if (n) {
+                    ordered.push(n);
+                    byId.delete(Number(id));
+                }
+            });
+            db.novels.forEach(n => {
+                if (byId.has(n.id)) ordered.push(n);
+            });
+
+            // Matéria marcada como concluída no ciclo atual vai para o final.
+            const cycleId = db.settings?.cycleReadNovelId;
+            if (cycleId != null) {
+                const idx = ordered.findIndex(n => Number(n.id) === Number(cycleId));
+                if (idx > -1) {
+                    const [cycleNovel] = ordered.splice(idx, 1);
+                    ordered.push(cycleNovel);
+                }
+            }
+            return ordered;
+        }
+
+        function syncHomeOrderFromList() {
+            const orderedIds = Array.from(document.querySelectorAll('[data-home-novel-id]'))
+                .map(el => Number(el.dataset.homeNovelId))
+                .filter(Number.isFinite);
+
+            ensureSettings().homeOrder = orderedIds;
+            saveToLocal();
+        }
+
+        function toggleHomeOrganizeMode() {
+            const active = !window.homeOrganizeMode;
+            window.homeOrganizeMode = active;
+            showHome();
+        }
+
+        function finishHomeOrganization() {
+            window.homeOrganizeMode = false;
+            syncHomeOrderFromList();
+            showHome();
+            showNotification("Ordem das matérias salva.");
+        }
+
+        function formatReadDate(date = new Date()) {
+            const d = new Date(date);
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = String(d.getFullYear()).slice(-2);
+            return `${day}/${month}/${year}`;
+        }
+
+        function moveCycleNovelToEnd(novelId) {
+            const settings = ensureSettings();
+            const id = Number(novelId);
+            settings.cycleReadNovelId = id;
+            if (!settings.lastReadAtByNovel || typeof settings.lastReadAtByNovel !== 'object') {
+                settings.lastReadAtByNovel = {};
+            }
+            settings.lastReadAtByNovel[id] = new Date().toISOString();
+
+            const ordered = getHomeOrderedNovels();
+            const idx = ordered.findIndex(n => Number(n.id) === id);
+            if (idx > -1) {
+                const [novel] = ordered.splice(idx, 1);
+                ordered.push(novel);
+                settings.homeOrder = ordered.map(n => n.id);
+            }
+            saveToLocal();
+            showHome();
+            showNotification("Matéria concluída e movida para o final.");
+        }
+
+        function setupHomeDragAndDrop() {
+            const container = document.getElementById('home-novels-grid');
+            if (!container || !window.homeOrganizeMode) return;
+
+            let draggedId = null;
+
+            container.querySelectorAll('[data-home-novel-id]').forEach(card => {
+                card.addEventListener('dragstart', e => {
+                    draggedId = Number(card.dataset.homeNovelId);
+                    card.classList.add('dragging');
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/plain', String(draggedId));
+                });
+
+                card.addEventListener('dragend', () => {
+                    card.classList.remove('dragging');
+                    container.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+                    draggedId = null;
+                });
+
+                card.addEventListener('dragover', e => {
+                    e.preventDefault();
+                    if (draggedId !== Number(card.dataset.homeNovelId)) {
+                        card.classList.add('drag-over');
+                        e.dataTransfer.dropEffect = 'move';
+                    }
+                });
+
+                card.addEventListener('dragleave', () => card.classList.remove('drag-over'));
+
+                card.addEventListener('drop', e => {
+                    e.preventDefault();
+                    card.classList.remove('drag-over');
+
+                    const targetId = Number(card.dataset.homeNovelId);
+                    if (!draggedId || draggedId === targetId) return;
+
+                    const current = getHomeOrderedNovels().map(n => n.id);
+                    const from = current.indexOf(draggedId);
+                    const to = current.indexOf(targetId);
+                    if (from < 0 || to < 0) return;
+
+                    current.splice(from, 1);
+                    current.splice(to, 0, draggedId);
+
+                    ensureSettings().homeOrder = current;
+                    saveToLocal();
+                    showHome();
+                });
+            });
+        }
+
+        function showHome() {
+            currentView = 'home';
+            practiceSessionSeconds = 0;
+            activeNovelId = null;
+            activeChapterId = null;
+            setActiveNav('home');
+
+            const orderedNovels = getHomeOrderedNovels();
+            const organizing = !!window.homeOrganizeMode;
+
+            let html = `
+                <div class="mb-6">
+                    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+                        <div>
+                            <h2 class="text-3xl font-bold text-white mb-2 border-l-4 border-blue-500 pl-3">Últimas Atualizações</h2>
+                            <p class="text-slate-400">${organizing ? 'Arraste e solte as matérias para definir a ordem de leitura.' : 'Explore os conteúdos mais recentes.'}</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            ${organizing
+                                ? `<button onclick="finishHomeOrganization()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-medium shadow flex items-center gap-2">
+                                    <i class="fas fa-check"></i> Salvar Ordem
+                                   </button>`
+                                : `<button onclick="toggleHomeOrganizeMode()" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg font-medium border border-slate-600 flex items-center gap-2">
+                                    <i class="fas fa-grip-vertical"></i> Organizar Matérias
+                                   </button>`}
+                        </div>
+                    </div>
+                </div>
+                <div id="home-novels-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 ${organizing ? 'home-organize-mode' : ''}">
+            `;
+
+            if (orderedNovels.length === 0) {
+                html += `<div class="col-span-full text-center text-slate-500 py-10">Nenhuma matéria publicada ainda.</div>`;
+            } else {
+                orderedNovels.forEach((novel, index) => {
+                    const chapterCount = db.chapters.filter(c => c.novelId === novel.id).length;
+                    const genresHtml = novel.genres.map(g => `<span class="inline-block bg-slate-700 text-xs px-2 py-1 rounded-full text-slate-300 mr-1 mb-1">${g.trim()}</span>`).join('');
+                    const lastReadAt = db.settings?.lastReadAtByNovel?.[novel.id];
+                    const cycleBadge = lastReadAt
+                        ? `<span class="absolute top-2 left-2 bg-emerald-600/95 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow flex items-center gap-1"><i class="fas fa-check"></i> Lida ${formatReadDate(lastReadAt)}</span>`
+                        : '';
+                    const isRead = !!lastReadAt;
+
+                    html += `
+                        <div data-home-novel-id="${novel.id}" draggable="${organizing}"
+                            class="novel-card bg-slate-800 rounded-lg overflow-hidden shadow-lg ${organizing ? 'cursor-grab' : 'cursor-pointer'} flex flex-col h-full border ${isRead ? 'border-emerald-600/60' : 'border-slate-700'}"
+                            ${organizing ? '' : `onclick="showNovelDetails(${novel.id})"`}>
+                            <div class="relative pb-[140%]">
+                                <img src="${getCoverUrl(novel.cover)}" alt="${novel.title}" class="absolute top-0 left-0 w-full h-full object-cover" onerror="this.src='https://placehold.co/300x450/1e293b/f8fafc?text=Sem+Capa'">
+                                <div class="absolute top-2 right-2 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded shadow">${chapterCount} Cap.</div>
+                                ${cycleBadge}
+                                ${organizing ? `<div class="absolute inset-0 bg-slate-950/20 flex items-center justify-center pointer-events-none"><span class="bg-slate-900/85 text-white px-3 py-2 rounded-lg text-sm shadow"><i class="fas fa-arrows-alt mr-2"></i> Arraste</span></div>` : ''}
+                            </div>
+                            <div class="p-4 flex flex-col flex-grow">
+                                <div class="flex items-start justify-between gap-2 mb-1">
+                                    <h3 class="text-lg font-bold text-white line-clamp-2">${novel.title}</h3>
+                                    <span class="shrink-0 inline-flex items-center gap-1 text-xs text-blue-300 bg-blue-900/30 border border-blue-800/60 px-2 py-1 rounded-full" title="Tempo investido nesta matéria">
+                                        <i class="fas fa-clock"></i>${formatTime(getNovelTime(novel.id))}
+                                    </span>
+                                </div>
+                                <div class="mb-2 flex-grow">${genresHtml}</div>
+                                ${index === 0 ? `
+                                    <div class="mt-2 pt-3 border-t border-slate-700 flex justify-end" onclick="event.stopPropagation()">
+                                        <button type="button" aria-label="Concluir matéria" title="Concluir matéria"
+                                            onclick="moveCycleNovelToEnd(${novel.id})"
+                                            class="w-8 h-8 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center shadow transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-400/60">
+                                            <i class="fas fa-check text-xs"></i>
+                                        </button>
+                                    </div>` : ''}
+                            </div>
+                        </div>`;
+                });
+            }
+            html += `</div>`;
+
+            appContent.innerHTML = html;
+            setupHomeDragAndDrop();
+            window.scrollTo(0,0);
+        }
+
+        function showLibrary(selectedGenre = null) {
+            currentView = 'library';
+            practiceSessionSeconds = 0;
+            activeNovelId = null;
+            activeChapterId = null;
+            setActiveNav('library');
+            let allGenres = new Set();
+            db.novels.forEach(n => n.genres.forEach(g => allGenres.add(g.trim())));
+            let genresArray = Array.from(allGenres).sort();
+
+            let filterHtml = `
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-white mb-4 border-l-4 border-blue-500 pl-3">Biblioteca</h2>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="showLibrary()" class="${!selectedGenre ? 'bg-blue-600' : 'bg-slate-700'} text-white px-4 py-1.5 rounded-full text-sm font-medium transition-colors">Todos</button>
+            `;
+            genresArray.forEach(g => {
+                filterHtml += `<button onclick="showLibrary('${g}')" class="${selectedGenre === g ? 'bg-blue-600' : 'bg-slate-700'} text-white px-4 py-1.5 rounded-full text-sm font-medium transition-colors">${g}</button>`;
+            });
+            filterHtml += `</div></div><div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">`;
+
+            let novelsToDisplay = selectedGenre ? db.novels.filter(n => n.genres.map(g => g.trim()).includes(selectedGenre)) : db.novels;
+
+            if (novelsToDisplay.length === 0) {
+                filterHtml += `<div class="col-span-full text-center text-slate-500 py-10">Nenhuma novel encontrada.</div>`;
+            } else {
+                novelsToDisplay.forEach(novel => {
+                    const chapterCount = db.chapters.filter(c => c.novelId === novel.id).length;
+                    const genresHtml = novel.genres.map(g => `<span class="inline-block bg-slate-700 text-xs px-2 py-1 rounded-full text-slate-300 mr-1 mb-1">${g.trim()}</span>`).join('');
+                    filterHtml += `
+                        <div class="novel-card bg-slate-800 rounded-lg overflow-hidden shadow-lg cursor-pointer flex flex-col h-full border border-slate-700" onclick="showNovelDetails(${novel.id})">
+                            <div class="relative pb-[140%]">
+                                <img src="${getCoverUrl(novel.cover)}" alt="${novel.title}" class="absolute top-0 left-0 w-full h-full object-cover" onerror="this.src='https://placehold.co/300x450/1e293b/f8fafc?text=Sem+Capa'">
+                                <div class="absolute top-2 right-2 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded shadow">${chapterCount} Cap.</div>
+                            </div>
+                            <div class="p-4 flex flex-col flex-grow">
+                                <div class="flex items-start justify-between gap-2 mb-1">
+                                    <h3 class="text-lg font-bold text-white line-clamp-2">${novel.title}</h3>
+                                    <span class="shrink-0 inline-flex items-center gap-1 text-xs text-blue-300 bg-blue-900/30 border border-blue-800/60 px-2 py-1 rounded-full" title="Tempo investido nesta matéria">
+                                        <i class="fas fa-clock"></i>${formatTime(getNovelTime(novel.id))}
+                                    </span>
+                                </div>
+                                <div class="mb-2 flex-grow">${genresHtml}</div>
+                            </div>
+                        </div>`;
+                });
+            }
+            filterHtml += `</div>`;
+            appContent.innerHTML = filterHtml;
+            window.scrollTo(0,0);
+        }
+
+        function showNovelDetails(novelId) {
+            currentView = 'novel';
+            practiceSessionSeconds = 0;
+            activeNovelId = novelId;
+            activeChapterId = null;
+            const novel = db.novels.find(n => n.id === novelId);
+            if (!novel) return;
+            const novelChapters = db.chapters.filter(c => c.novelId === novelId);
+            const genresHtml = novel.genres.map(g => `<span class="bg-blue-900/50 border border-blue-500 text-blue-300 text-sm px-3 py-1 rounded-full mr-2 mb-2 inline-block">${g.trim()}</span>`).join('');
+
+            let html = `
+                <div class="mb-4"><button onclick="showHome()" class="text-slate-400 hover:text-white transition-colors flex items-center space-x-2"><i class="fas fa-arrow-left"></i> <span>Voltar</span></button></div>
+                
+                <div class="bg-slate-800 rounded-xl shadow-xl overflow-hidden border border-slate-700 mb-8">
+                    <div class="md:flex">
+                        <div class="md:w-1/3 lg:w-1/4 p-6 flex justify-center md:justify-start bg-slate-800/50 border-r border-slate-700">
+                            <img src="${getCoverUrl(novel.cover)}" alt="${novel.title}" class="rounded-lg shadow-lg w-full max-w-xs object-cover" style="aspect-ratio: 2/3;" onerror="this.src='https://placehold.co/300x450/1e293b/f8fafc?text=Sem+Capa'">
+                        </div>
+                        <div class="md:w-2/3 lg:w-3/4 p-6 flex flex-col">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h2 class="text-3xl md:text-4xl font-bold text-white">${novel.title}</h2>
+                                    <div class="mt-2 inline-flex items-center gap-2 text-sm text-blue-300 bg-blue-900/30 border border-blue-800/60 px-3 py-1.5 rounded-full">
+                                        <i class="fas fa-clock"></i>
+                                        <span>Tempo investido: ${formatTime(getNovelTime(novel.id))}</span>
+                                    </div>
+                                </div>
+                                <button onclick="openEditNovelModal(${novel.id})" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-md text-sm transition-colors border border-slate-600 flex items-center shadow-sm"><i class="fas fa-edit mr-2"></i> Editar</button>
+                            </div>
+                            <div class="mb-6 flex flex-wrap">${genresHtml}</div>
+                            <div class="bg-slate-900/50 p-4 rounded-lg flex-grow">
+                                <h4 class="text-lg font-semibold text-slate-200 border-b border-slate-700 pb-2 mb-3">Sinopse</h4>
+                                <p class="text-slate-300 leading-relaxed whitespace-pre-line">${novel.synopsis}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800 rounded-xl shadow-lg p-6 border border-slate-700">
+                    <div class="flex justify-between items-center border-b border-slate-700 pb-4 mb-4">
+                        <h3 class="text-2xl font-bold text-white flex items-center"><i class="fas fa-list-ul mr-3 text-blue-500"></i> Capítulos (${novelChapters.length})</h3>
+                        <button onclick="openPostModal('chapter', ${novel.id})" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded text-sm transition-colors shadow">+ Add Capítulo</button>
+                    </div>
+                    <div class="space-y-2">
+            `;
+
+            if (novelChapters.length === 0) {
+                html += `<div class="text-center text-slate-500 py-6">Nenhum capítulo publicado ainda.</div>`;
+            } else {
+                novelChapters.forEach(chapter => {
+                    // Check if chapter has quiz
+                    const hasQuiz = db.questions.filter(q => q.chapterId === chapter.id).length > 0;
+                    const quizIcon = hasQuiz ? `<i class="fas fa-brain text-purple-400 ml-2" title="Possui Quiz"></i>` : '';
+
+                    html += `
+                        <div onclick="showChapter(${novel.id}, ${chapter.id})" class="chapter-list-item flex justify-between items-center p-4 rounded-lg bg-slate-900/50 cursor-pointer border border-slate-700/50">
+                            <span class="font-medium text-slate-200 min-w-0 flex items-center gap-2">
+                                <span class="truncate">${chapter.title}</span>
+                                ${quizIcon}
+                                <span class="shrink-0 inline-flex items-center gap-1 text-xs text-slate-400 bg-slate-800 border border-slate-700 px-2 py-1 rounded-full" title="Tempo investido neste capítulo">
+                                    <i class="fas fa-clock text-blue-400"></i>${formatTime(getChapterTime(chapter.id))}
+                                </span>
+                            </span>
+                            <div class="flex items-center space-x-4">
+                                <button onclick="event.stopPropagation(); openEditChapterModal(${novel.id}, ${chapter.id})" class="text-slate-400 hover:text-blue-400 transition-colors" title="Editar Capítulo"><i class="fas fa-edit"></i></button>
+                                <i class="fas fa-chevron-right text-slate-500"></i>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            html += `</div></div>`;
+            appContent.innerHTML = html;
+            window.scrollTo(0,0);
+        }
+
+        function showChapter(novelId, chapterId) {
+            currentView = 'chapter';
+            practiceSessionSeconds = 0;
+            activeNovelId = novelId;
+            activeChapterId = chapterId;
+            const novel = db.novels.find(n => n.id === novelId);
+            const chapter = db.chapters.find(c => c.id === chapterId && c.novelId === novelId);
+            if (!novel || !chapter) return;
+
+            const novelChapters = db.chapters.filter(c => c.novelId === novelId);
+            const currentIndex = novelChapters.findIndex(c => c.id === chapterId);
+            const prevChapter = currentIndex > 0 ? novelChapters[currentIndex - 1] : null;
+            const nextChapter = currentIndex < novelChapters.length - 1 ? novelChapters[currentIndex + 1] : null;
+
+            const formattedContent = `<div class="text-lg text-slate-300 leading-relaxed font-serif chapter-body">${chapter.content}</div>`;
+
+            // Buscar questões do capítulo
+            const chapterQuestions = db.questions.filter(q => q.chapterId === chapterId);
+            let quizHtml = '';
+
+            if (chapterQuestions.length > 0) {
+                const groups = [
+                    { type: 'mc', label: 'Múltipla Escolha', icon: 'fa-list-check', color: 'blue' },
+                    { type: 'tf', label: 'Certo/Errado', icon: 'fa-circle-check', color: 'emerald' },
+                    { type: 'flashcard', label: 'Flash Cards', icon: 'fa-clone', color: 'purple' }
+                ];
+                const availableGroups = groups.filter(g => chapterQuestions.some(q => q.type === g.type));
+
+                quizHtml = `
+                    <div class="mt-16 pt-10 border-t-2 border-dashed border-slate-700">
+                        <div class="text-center mb-8">
+                            <h3 class="text-3xl font-bold text-white inline-flex items-center">
+                                <i class="fas fa-brain text-blue-500 mr-3"></i> Teste de Compreensão
+                            </h3>
+                            <p class="text-slate-400 mt-2">Escolha um tipo de questão para começar. Apenas o grupo selecionado será exibido.</p>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
+                `;
+
+                availableGroups.forEach(group => {
+                    const count = chapterQuestions.filter(q => q.type === group.type).length;
+                    quizHtml += `
+                        <button type="button" onclick="toggleQuizGroup('${group.type}', ${chapterId})"
+                            class="quiz-group-toggle bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-xl p-4 text-left transition-all shadow-md"
+                            aria-expanded="false" aria-controls="quiz-group-${group.type}-${chapterId}">
+                            <div class="flex items-center gap-3">
+                                <span class="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center text-${group.color}-400"><i class="fas ${group.icon}"></i></span>
+                                <span><span class="block text-sm font-semibold text-white">${group.label}</span><span class="block text-xs text-slate-400">${count} ${count === 1 ? 'questão' : 'questões'}</span></span>
+                            </div>
+                        </button>
+                    `;
+                });
+
+                quizHtml += `</div>`;
+
+                availableGroups.forEach(group => {
+                    const groupQuestions = chapterQuestions.filter(q => q.type === group.type);
+                    chapterQuizState[`${chapterId}-${group.type}`] = { index: 0, order: groupQuestions.map(q => q.id), baseOrder: groupQuestions.map(q => q.id), shuffled: false };
+                    quizHtml += `<div id="quiz-group-${group.type}-${chapterId}" class="quiz-group hidden space-y-8" data-quiz-type="${group.type}">`;
+                    quizHtml += `<div class="flex items-center justify-between gap-3 bg-slate-900/70 border border-slate-700 rounded-xl p-3">
+                        <button type="button" id="shuffle-chapter-${group.type}-${chapterId}" onclick="toggleShuffleChapterQuiz('${group.type}', ${chapterId})" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-lg text-sm border border-slate-600 transition-colors"><i class="fas fa-random mr-2"></i><span>Ordem aleatória</span></button>
+                        <span id="quiz-progress-${group.type}-${chapterId}" class="text-sm text-slate-400 font-medium">1 / ${groupQuestions.length}</span>
+                        <div class="flex gap-2"><button type="button" onclick="navigateChapterQuiz('${group.type}', ${chapterId}, -1)" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-lg border border-slate-600"><i class="fas fa-chevron-left"></i></button><button type="button" onclick="navigateChapterQuiz('${group.type}', ${chapterId}, 1)" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-lg border border-blue-500"><i class="fas fa-chevron-right"></i></button></div>
+                    </div>`;
+                    groupQuestions.forEach((q, index) => {
+                        quizHtml += `<div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg chapter-quiz-question" data-question-id="${q.id}" data-question-index="${index}" id="question-card-${q.id}" style="display:${index === 0 ? 'block' : 'none'}">`;
+                        quizHtml += `<h4 class="text-xl font-medium text-white mb-4"><span class="text-blue-400 font-bold mr-2">Q${index + 1}.</span> ${q.question}</h4>`;
+                        if (q.type === 'tf') {
+                            quizHtml += `<div class="flex space-x-4 mt-4"><button onclick="submitAnswer(${q.id}, 'T', this)" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-medium py-3 rounded-lg border border-slate-600 transition-colors">Certo</button><button onclick="submitAnswer(${q.id}, 'F', this)" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-medium py-3 rounded-lg border border-slate-600 transition-colors">Errado</button></div>`;
+                        } else if (q.type === 'mc') {
+                            quizHtml += `<div class="space-y-3 mt-4">`;
+                            ['A', 'B', 'C', 'D', 'E'].forEach(opt => { if(q.options[opt]) quizHtml += `<button onclick="submitAnswer(${q.id}, '${opt}', this)" class="w-full text-left bg-slate-700 hover:bg-slate-600 text-white font-medium py-3 px-4 rounded-lg border border-slate-600 transition-colors flex items-center"><span class="bg-slate-900 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm border border-slate-500">${opt}</span>${q.options[opt]}</button>`; });
+                            quizHtml += `</div>`;
+                        } else if (q.type === 'flashcard') {
+                            quizHtml += `<div class="flashcard cursor-pointer w-full" onclick="flipCard(this, ${q.id})"><div class="flashcard-inner bg-slate-700 rounded-xl shadow-inner border border-slate-600"><div class="flashcard-front"><i class="fas fa-undo-alt text-slate-400 mb-3 text-2xl"></i><p class="text-slate-300 font-medium">Clique para revelar a resposta</p></div><div class="flashcard-back bg-blue-900/40"><p class="text-white font-medium text-lg mb-6">${q.answer}</p><div class="flex space-x-4 w-full px-6" onclick="event.stopPropagation()"><button onclick="submitFlashcardAnswer(${q.id}, true, this)" class="flex-1 bg-green-600 hover:bg-green-500 text-white py-2 rounded shadow transition-colors"><i class="fas fa-check mr-2"></i>Acertei</button><button onclick="submitFlashcardAnswer(${q.id}, false, this)" class="flex-1 bg-red-600 hover:bg-red-500 text-white py-2 rounded shadow transition-colors"><i class="fas fa-times mr-2"></i>Errei</button></div></div></div></div>`;
+                        }
+                        quizHtml += `<div id="feedback-${q.id}" class="mt-4 hidden p-3 rounded font-medium text-center"></div></div>`;
+                    });
+                    quizHtml += `</div>`;
+                });
+                quizHtml += `</div>`;
+            }
+
+            const navigationHtml = `
+                <div class="flex justify-between items-center mt-10 pt-6 border-t border-slate-800">
+                    <button ${prevChapter ? `onclick="showChapter(${novelId}, ${prevChapter.id})"` : 'disabled'} class="${prevChapter ? 'bg-slate-700 hover:bg-slate-600 text-white' : 'bg-slate-800 text-slate-600 cursor-not-allowed'} px-4 py-2 rounded transition-colors flex items-center">
+                        <i class="fas fa-chevron-left mr-2"></i> Anterior
+                    </button>
+                    <button onclick="showNovelDetails(${novelId})" class="text-blue-400 hover:text-blue-300">
+                        <i class="fas fa-list"></i> Índice
+                    </button>
+                    <button ${nextChapter ? `onclick="showChapter(${novelId}, ${nextChapter.id})"` : 'disabled'} class="${nextChapter ? 'bg-blue-600 hover:bg-blue-500 text-white' : 'bg-slate-800 text-slate-600 cursor-not-allowed'} px-4 py-2 rounded transition-colors flex items-center">
+                        Próximo <i class="fas fa-chevron-right ml-2"></i>
+                    </button>
+                </div>
+            `;
+
+            let html = `
+                <div class="max-w-4xl mx-auto">
+                    <div class="mb-6 flex justify-between items-center text-sm text-slate-400">
+                        <button onclick="showNovelDetails(${novelId})" class="hover:text-white transition-colors flex items-center">
+                            <i class="fas fa-arrow-left mr-2"></i> ${novel.title}
+                        </button>
+                    </div>
+                    <article class="bg-slate-900 rounded-xl shadow-2xl p-6 md:p-10 border border-slate-800">
+                        <header class="text-center mb-10 border-b border-slate-800 pb-6 relative">
+                            <h1 class="text-2xl md:text-3xl font-bold text-white mb-2">${chapter.title}</h1>
+                            <button onclick="openEditChapterModal(${novelId}, ${chapter.id})" class="absolute top-0 right-0 bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1 rounded text-sm transition-colors border border-slate-700 flex items-center"><i class="fas fa-edit mr-2"></i> Editar</button>
+                        </header>
+                        <div class="chapter-content select-text">${formattedContent}</div>
+                        ${quizHtml}
+                        ${navigationHtml}
+                    </article>
+                </div>
+            `;
+            appContent.innerHTML = html;
+            window.scrollTo(0,0);
+        }
+
+        function navigateChapterQuiz(type, chapterId, delta) {
+            const key = `${chapterId}-${type}`;
+            const state = chapterQuizState[key];
+            if (!state) return;
+            state.index = Math.max(0, Math.min(state.order.length - 1, state.index + delta));
+            renderChapterQuizPosition(type, chapterId);
+        }
+
+        function toggleShuffleChapterQuiz(type, chapterId) {
+            const key = `${chapterId}-${type}`;
+            const state = chapterQuizState[key];
+            if (!state) return;
+            state.shuffled = !state.shuffled;
+            state.order = [...state.baseOrder];
+            if (state.shuffled) {
+                for (let i = state.order.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [state.order[i], state.order[j]] = [state.order[j], state.order[i]]; }
+            }
+            state.index = 0;
+            renderChapterQuizPosition(type, chapterId);
+        }
+
+        function renderChapterQuizPosition(type, chapterId) {
+            const key = `${chapterId}-${type}`;
+            const state = chapterQuizState[key];
+            if (!state) return;
+            const group = document.getElementById(`quiz-group-${type}-${chapterId}`);
+            if (!group) return;
+            const cards = Array.from(group.querySelectorAll('.chapter-quiz-question'));
+            cards.forEach(card => card.style.display = 'none');
+            const activeId = state.order[state.index];
+            const active = group.querySelector(`[data-question-id=\"${activeId}\"]`);
+            if (active) active.style.display = 'block';
+            const progress = document.getElementById(`quiz-progress-${type}-${chapterId}`);
+            if (progress) progress.textContent = `${state.index + 1} / ${state.order.length}`;
+            updateShuffleButtonState(`shuffle-chapter-${type}-${chapterId}`, state.shuffled);
+        }
+
+        function toggleQuizGroup(type, chapterId) {
+            document.querySelectorAll('.quiz-group').forEach(group => {
+                group.classList.toggle('hidden', group.id !== `quiz-group-${type}-${chapterId}`);
+            });
+            document.querySelectorAll('.quiz-group-toggle').forEach(button => {
+                const active = button.getAttribute('aria-controls') === `quiz-group-${type}-${chapterId}`;
+                button.setAttribute('aria-expanded', active ? 'true' : 'false');
+                button.classList.toggle('ring-2', active);
+                button.classList.toggle('ring-blue-500', active);
+                button.classList.toggle('border-blue-500', active);
+            });
+        }
+
+        function submitAnswer(questionId, selectedValue, btnElement) {
+            const question = db.questions.find(q => q.id === questionId);
+            if (!question) return;
+
+            const isCorrect = (question.answer === selectedValue);
+            recordResponse(questionId, question.chapterId, isCorrect);
+
+            const card = document.getElementById(`question-card-${questionId}`);
+            const buttons = card.querySelectorAll('button');
+            buttons.forEach(btn => {
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+            });
+
+            // Highlight chosen button
+            btnElement.classList.remove('bg-slate-700', 'hover:bg-slate-600', 'opacity-50');
+            if (isCorrect) {
+                btnElement.classList.add('bg-green-600', 'text-white', 'border-green-500');
+            } else {
+                btnElement.classList.add('bg-red-600', 'text-white', 'border-red-500');
+                // Optional: highlight correct one too
+            }
+
+            const feedback = document.getElementById(`feedback-${questionId}`);
+            feedback.classList.remove('hidden');
+            if (isCorrect) {
+                feedback.classList.add('bg-green-900/50', 'text-green-400', 'border', 'border-green-800');
+                feedback.innerHTML = `<i class="fas fa-check-circle mr-2"></i> Resposta Correta!`;
+            } else {
+                feedback.classList.add('bg-red-900/50', 'text-red-400', 'border', 'border-red-800');
+                let correctText = question.type === 'tf' ? (question.answer === 'T' ? 'Certo' : 'Errado') : `Alternativa ${question.answer}`;
+                feedback.innerHTML = `<i class="fas fa-times-circle mr-2"></i> Resposta Incorreta. A correta era: <b>${correctText}</b>`;
+            }
+
+            // Exibe o comentário/explicação configurado para a questão
+            showQuestionComment(questionId, question.comment);
+        }
+
+        function flipCard(cardElement, questionId) {
+            if (!cardElement.classList.contains('answered')) {
+                cardElement.classList.toggle('flipped');
+            }
+        }
+
+        function submitFlashcardAnswer(questionId, isCorrect, btnElement) {
+            const question = db.questions.find(q => q.id === questionId);
+            if (!question) return;
+
+            recordResponse(questionId, question.chapterId, isCorrect);
+
+            const card = document.getElementById(`question-card-${questionId}`).querySelector('.flashcard');
+            card.classList.add('answered');
+            
+            const buttons = card.querySelectorAll('button');
+            buttons.forEach(btn => btn.style.display = 'none'); // Hide buttons after answer
+
+            const feedback = document.getElementById(`feedback-${questionId}`);
+            feedback.classList.remove('hidden');
+            if (isCorrect) {
+                feedback.classList.add('bg-green-900/50', 'text-green-400', 'border', 'border-green-800');
+                feedback.innerHTML = `<i class="fas fa-check-circle mr-2"></i> Você acertou este flashcard!`;
+            } else {
+                feedback.classList.add('bg-orange-900/50', 'text-orange-400', 'border', 'border-orange-800');
+                feedback.innerHTML = `<i class="fas fa-sync-alt mr-2"></i> Continue praticando este flashcard.`;
+            }
+
+            // Exibe o comentário/explicação configurado para a questão
+            showQuestionComment(questionId, question.comment);
+        }
+
+        function showQuestionComment(questionId, comment) {
+            if (!comment || !comment.trim()) return;
+
+            const card = document.getElementById(`question-card-${questionId}`);
+            if (!card) return;
+
+            // Evita duplicar o comentário caso a função seja chamada novamente
+            let commentBox = document.getElementById(`comment-${questionId}`);
+
+            if (!commentBox) {
+                commentBox = document.createElement('div');
+                commentBox.id = `comment-${questionId}`;
+                commentBox.className = 'mt-3 p-4 rounded-lg bg-blue-900/30 border border-blue-800 text-slate-200 text-sm leading-relaxed';
+
+                const feedback = document.getElementById(`feedback-${questionId}`);
+                feedback.insertAdjacentElement('afterend', commentBox);
+            }
+
+            commentBox.innerHTML = `
+                <div class="flex items-start gap-3">
+                    <i class="fas fa-lightbulb text-yellow-400 mt-0.5"></i>
+                    <div>
+                        <strong class="text-blue-300 block mb-1">Comentário</strong>
+                        <div class="whitespace-pre-line">${comment}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function recordResponse(questionId, chapterId, isCorrect) {
+            const chapter = db.chapters.find(c => c.id === chapterId);
+            const novelId = chapter ? chapter.novelId : null;
+
+            db.quizResponses.push({
+                id: Date.now(),
+                questionId: questionId,
+                chapterId: chapterId,
+                novelId: novelId,
+                isCorrect: isCorrect,
+                date: new Date().toISOString()
+            });
+            saveToLocal();
+        }
+
+        function openEditNovelModal(novelId) {
+            const novel = db.novels.find(n => n.id === novelId);
+            if (!novel) return;
+            editingNovelId = novelId;
+            document.getElementById('novel-title').value = novel.title;
+            document.getElementById('novel-genres').value = novel.genres.join(', ');
+            document.getElementById('novel-synopsis').value = novel.synopsis;
+
+            if ((novel.cover || '').startsWith('data:image')) {
+                setCoverMode('upload');
+                uploadedCoverDataUrl = novel.cover;
+                document.getElementById('cover-preview').src = novel.cover;
+                document.getElementById('cover-preview').classList.remove('hidden');
+                document.getElementById('upload-placeholder').classList.add('hidden');
+            } else {
+                setCoverMode('url');
+                document.getElementById('novel-cover-url').value = novel.cover;
+            }
+
+            document.getElementById('modal-title').innerText = "Edição de Conteúdo";
+            document.getElementById('submit-novel-btn').innerText = "Salvar Alterações";
+            openPostModal('novel');
+        }
+
+        function openEditChapterModal(novelId, chapterId) {
+            const chapter = db.chapters.find(c => c.id === chapterId && c.novelId === novelId);
+            if (!chapter) return;
+            editingChapterId = chapterId;
+            openPostModal('chapter', novelId);
+            
+            document.getElementById('chapter-novel-select').value = novelId;
+            document.getElementById('chapter-title').value = chapter.title;
+            document.getElementById('chapter-content').innerHTML = chapter.content;
+
+            // Load existing questions into temporary array
+            currentChapterQuestions = db.questions
+                .filter(q => q.chapterId === chapterId)
+                .map(q => ({...q, comment: q.comment || ''})); // Clone + compatibilidade com questões antigas
+            expandedQuizEditorQuestions.clear();
+            renderQuizEditor();
+
+            document.getElementById('modal-title').innerText = "Editar Capítulo";
+            document.getElementById('submit-chapter-btn').innerText = "Salvar Alterações";
+        }
+
+        function openPostModal(defaultTab = 'novel', preselectNovelId = null) {
+            const modal = document.getElementById('post-modal');
+            modal.classList.remove('hidden');
+            
+            const select = document.getElementById('chapter-novel-select');
+            select.innerHTML = '<option value="" disabled selected>Escolha a novel...</option>';
+            db.novels.forEach(novel => {
+                select.innerHTML += `<option value="${novel.id}">${novel.title}</option>`;
+            });
+
+            if (preselectNovelId) select.value = preselectNovelId;
+            
+            // Reset temp quiz array se for um novo capítulo
+            if (!editingChapterId) {
+                currentChapterQuestions = [];
+                renderQuizEditor();
+            }
+
+            switchTab(defaultTab);
+        }
+
+        function closePostModal() {
+            document.getElementById('post-modal').classList.add('hidden');
+            document.getElementById('form-new-novel').reset();
+            document.getElementById('form-new-chapter').reset();
+            document.getElementById('chapter-content').innerHTML = '';
+            
+            currentCoverMode = 'url';
+            document.getElementById('cover-preview').src = '';
+            document.getElementById('cover-preview').classList.add('hidden');
+            document.getElementById('upload-placeholder').classList.remove('hidden');
+            setCoverMode('url');
+            
+            editingNovelId = null;
+            editingChapterId = null;
+            currentChapterQuestions = [];
+            expandedQuizEditorQuestions.clear();
+            
+            document.getElementById('modal-title').innerText = "O que você deseja postar?";
+            document.getElementById('submit-novel-btn').innerText = "Criar Matéria";
+            document.getElementById('submit-chapter-btn').innerText = "Publicar Capítulo";
+        }
+
+        function switchTab(tab) {
+            const tabNovelBtn = document.getElementById('tab-novel');
+            const tabChapterBtn = document.getElementById('tab-chapter');
+            const formNovel = document.getElementById('form-new-novel');
+            const formChapter = document.getElementById('form-new-chapter');
+
+            tabNovelBtn.className = "px-4 py-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 font-medium transition-colors";
+            tabChapterBtn.className = "px-4 py-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 font-medium transition-colors";
+            formNovel.classList.add('hidden');
+            formChapter.classList.add('hidden');
+
+            if (tab === 'novel') {
+                tabNovelBtn.className = "px-4 py-2 border-b-2 border-blue-500 text-blue-400 font-medium";
+                formNovel.classList.remove('hidden');
+            } else {
+                tabChapterBtn.className = "px-4 py-2 border-b-2 border-blue-500 text-blue-400 font-medium";
+                formChapter.classList.remove('hidden');
+                if (db.novels.length === 0) {
+                   document.getElementById('chapter-novel-select').innerHTML = '<option value="" disabled selected>Crie uma novel primeiro!</option>';
+                }
+            }
+        }
+
+        function toggleChapterContentEditor() {
+            const editor = document.getElementById('editor-container');
+            const content = document.getElementById('chapter-content');
+            const button = document.getElementById('toggle-chapter-content-btn');
+            if (!editor || !content || !button) return;
+
+            const collapsed = content.classList.toggle('hidden');
+            editor.classList.toggle('border-b', !collapsed);
+            button.innerHTML = collapsed
+                ? '<i class="fas fa-chevron-down"></i><span>Exibir conteúdo</span>'
+                : '<i class="fas fa-chevron-up"></i><span>Ocultar conteúdo</span>';
+            button.title = collapsed ? 'Exibir conteúdo do capítulo' : 'Ocultar conteúdo do capítulo';
+        }
+
+        function addQuizQuestion() {
+            const newQ = {
+                tempId: Date.now() + Math.random(),
+                type: 'tf', // tf, mc, flashcard
+                question: '',
+                answer: 'T',
+                options: { A: '', B: '', C: '', D: '', E: '' },
+                comment: ''
+            };
+            currentChapterQuestions.push(newQ);
+            expandedQuizEditorQuestions.add(newQ.tempId);
+            renderQuizEditor();
+        }
+
+        function toggleQuizEditorQuestion(id) {
+            if (expandedQuizEditorQuestions.has(id)) {
+                expandedQuizEditorQuestions.delete(id);
+            } else {
+                expandedQuizEditorQuestions.add(id);
+            }
+            renderQuizEditor();
+        }
+
+        function removeQuizQuestion(tempId) {
+            currentChapterQuestions = currentChapterQuestions.filter(q => q.tempId !== tempId && q.id !== tempId);
+            expandedQuizEditorQuestions.delete(tempId);
+            renderQuizEditor();
+        }
+
+        function updateQuestionField(id, field, value, optKey = null) {
+            const q = currentChapterQuestions.find(q => q.tempId === id || q.id === id);
+            if (!q) return;
+            if (optKey) {
+                q.options[optKey] = value;
+            } else {
+                q[field] = value;
+            }
+            if (field === 'type') renderQuizEditor(); // Re-render to show correct fields
+        }
+
+        function renderQuizEditor() {
+            const container = document.getElementById('quiz-editor-container');
+            container.innerHTML = '';
+
+            if (currentChapterQuestions.length === 0) {
+                container.innerHTML = `<div class="text-slate-500 text-sm text-center py-4 bg-slate-800/50 rounded-md border border-slate-700/50">Nenhuma questão adicionada a este capítulo.</div>`;
+                return;
+            }
+
+            const typeInfo = {
+                tf: { label: 'Certo ou Errado', icon: 'fa-circle-check', color: 'emerald' },
+                mc: { label: 'Múltipla Escolha', icon: 'fa-list-check', color: 'blue' },
+                flashcard: { label: 'Flashcard', icon: 'fa-clone', color: 'purple' }
+            };
+
+            currentChapterQuestions.forEach((q, index) => {
+                const qId = q.tempId || q.id;
+                const isExpanded = expandedQuizEditorQuestions.has(qId);
+                const info = typeInfo[q.type] || typeInfo.tf;
+                const questionPreview = q.question && q.question.trim()
+                    ? q.question.trim()
+                    : 'Questão sem enunciado — clique para editar';
+                let bodyHtml = '';
+
+                if (q.type === 'tf') {
+                    bodyHtml = `
+                        <div class="mt-2">
+                            <label class="block text-xs text-slate-400 mb-1">Resposta Correta</label>
+                            <select onchange="updateQuestionField(${qId}, 'answer', this.value)" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm focus:border-blue-500">
+                                <option value="T" ${q.answer === 'T' ? 'selected' : ''}>Certo (Verdadeiro)</option>
+                                <option value="F" ${q.answer === 'F' ? 'selected' : ''}>Errado (Falso)</option>
+                            </select>
+                        </div>
+                    `;
+                } else if (q.type === 'mc') {
+                    bodyHtml = `<div class="mt-3 space-y-2">`;
+                    ['A', 'B', 'C', 'D', 'E'].forEach(opt => {
+                        bodyHtml += `
+                            <div class="flex items-center space-x-2">
+                                <span class="text-sm font-bold text-slate-400 w-6">${opt}.</span>
+                                <input type="text" placeholder="Alternativa ${opt}" value="${q.options[opt] || ''}" onchange="updateQuestionField(${qId}, 'options', this.value, '${opt}')" class="flex-grow bg-slate-800 border border-slate-600 rounded p-1.5 text-white text-sm focus:border-blue-500">
+                                <input type="radio" name="answer_${qId}" value="${opt}" ${q.answer === opt ? 'checked' : ''} onchange="updateQuestionField(${qId}, 'answer', this.value)" title="Marcar como correta" class="w-4 h-4 text-blue-600">
+                            </div>
+                        `;
+                    });
+                    if (!['A','B','C','D','E'].includes(q.answer)) q.answer = 'A';
+                    bodyHtml += `</div>`;
+                } else if (q.type === 'flashcard') {
+                    bodyHtml = `
+                        <div class="mt-2">
+                            <label class="block text-xs text-slate-400 mb-1">Verso do Cartão (Resposta)</label>
+                            <textarea onchange="updateQuestionField(${qId}, 'answer', this.value)" placeholder="Explicação ou conceito que aparecerá no verso..." rows="2" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm">${q.answer}</textarea>
+                        </div>
+                    `;
+                }
+
+                container.innerHTML += `
+                    <div class="bg-slate-900 border ${isExpanded ? 'border-blue-500/70 shadow-lg shadow-blue-950/20' : 'border-slate-700'} rounded-xl overflow-hidden transition-all">
+                        <div class="flex items-center gap-3 p-3 bg-slate-800/70 hover:bg-slate-800 transition-colors">
+                            <button type="button" onclick="toggleQuizEditorQuestion(${qId})" class="flex-1 min-w-0 text-left flex items-center gap-3" aria-expanded="${isExpanded}">
+                                <span class="w-10 h-10 shrink-0 rounded-lg bg-slate-900 border border-slate-700 flex items-center justify-center text-${info.color}-400">
+                                    <i class="fas ${info.icon}"></i>
+                                </span>
+                                <span class="min-w-0 flex-1">
+                                    <span class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                                        <span>Questão ${index + 1}</span>
+                                        <span class="text-slate-600">•</span>
+                                        <span class="text-${info.color}-400">${info.label}</span>
+                                    </span>
+                                    <span class="block text-sm text-slate-200 truncate mt-0.5" title="${questionPreview}">${questionPreview}</span>
+                                </span>
+                                <i class="fas fa-chevron-${isExpanded ? 'up' : 'down'} text-slate-500 mr-1 transition-transform"></i>
+                            </button>
+                            <button type="button" onclick="removeQuizQuestion(${qId})" class="shrink-0 w-9 h-9 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-950/30 transition-colors" title="Remover Questão">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+
+                        <div class="${isExpanded ? '' : 'hidden'} border-t border-slate-700 p-4">
+                            <div class="flex flex-col sm:flex-row gap-4 mb-3">
+                                <div class="sm:w-1/3">
+                                    <label class="block text-xs text-slate-400 mb-1">Tipo da Questão</label>
+                                    <select onchange="updateQuestionField(${qId}, 'type', this.value)" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm focus:border-blue-500">
+                                        <option value="tf" ${q.type === 'tf' ? 'selected' : ''}>Certo ou Errado</option>
+                                        <option value="mc" ${q.type === 'mc' ? 'selected' : ''}>Múltipla Escolha</option>
+                                        <option value="flashcard" ${q.type === 'flashcard' ? 'selected' : ''}>Flashcard</option>
+                                    </select>
+                                </div>
+                                <div class="sm:w-2/3">
+                                    <label class="block text-xs text-slate-400 mb-1">${q.type === 'flashcard' ? 'Frente do Cartão (Pergunta/Conceito)' : 'Pergunta'}</label>
+                                    <textarea rows="3" onchange="updateQuestionField(${qId}, 'question', this.value)" placeholder="Digite aqui... Use Shift+Enter para pular linha" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm resize-y focus:outline-none focus:border-blue-500">${q.question || ''}</textarea>
+                                </div>
+                            </div>
+                            ${bodyHtml}
+
+                            <div class="mt-4 pt-4 border-t border-slate-700">
+                                <label class="block text-xs text-slate-400 mb-1">
+                                    <i class="fas fa-comment-alt text-blue-400 mr-1"></i>
+                                    Comentário após a resposta
+                                </label>
+                                <textarea
+                                    onchange="updateQuestionField(${qId}, 'comment', this.value)"
+                                    placeholder="Digite uma explicação, comentário ou justificativa que será exibida após o aluno responder..."
+                                    rows="3"
+                                    class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                >${q.comment || ''}</textarea>
+                                <p class="text-xs text-slate-500 mt-1">
+                                    Este comentário aparecerá somente depois que a questão for respondida.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        let currentCoverMode = 'url';
+        let uploadedCoverDataUrl = '';
+
+        function setCoverMode(mode) {
+            currentCoverMode = mode;
+            const urlInput = document.getElementById('novel-cover-url');
+            const uploadContainer = document.getElementById('upload-container');
+            const btnUrl = document.getElementById('btn-cover-url');
+            const btnUpload = document.getElementById('btn-cover-upload');
+
+            if (mode === 'url') {
+                urlInput.classList.remove('hidden'); uploadContainer.classList.add('hidden'); urlInput.removeAttribute('required');
+                btnUrl.className = "px-3 py-1 bg-blue-600 text-white rounded-md text-sm";
+                btnUpload.className = "px-3 py-1 bg-slate-700 text-slate-300 rounded-md text-sm";
+            } else {
+                urlInput.classList.add('hidden'); uploadContainer.classList.remove('hidden'); urlInput.removeAttribute('required');
+                btnUpload.className = "px-3 py-1 bg-blue-600 text-white rounded-md text-sm";
+                btnUrl.className = "px-3 py-1 bg-slate-700 text-slate-300 rounded-md text-sm";
+            }
+        }
+
+        function previewImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    uploadedCoverDataUrl = e.target.result;
+                    document.getElementById('cover-preview').src = uploadedCoverDataUrl;
+                    document.getElementById('cover-preview').classList.remove('hidden');
+                    document.getElementById('upload-placeholder').classList.add('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function formatText(command, value = null) {
+            document.execCommand(command, false, value);
+            document.getElementById('chapter-content').focus();
+        }
+
+        function handleNewNovel(e) {
+            e.preventDefault();
+            const title = document.getElementById('novel-title').value;
+            const genresStr = document.getElementById('novel-genres').value;
+            let cover = currentCoverMode === 'url' ? document.getElementById('novel-cover-url').value.trim() : uploadedCoverDataUrl;
+            if (editingNovelId && !cover) {
+                const existingNovel = db.novels.find(n => n.id === editingNovelId);
+                cover = existingNovel?.cover || '';
+            }
+            
+            // Capa é opcional: sem URL/upload a matéria será exibida com o placeholder "Sem Capa".
+            const synopsis = document.getElementById('novel-synopsis').value;
+            const genres = genresStr.split(',').map(g => g.trim()).filter(g => g !== "");
+            const newId = editingNovelId ? editingNovelId : (db.novels.length > 0 ? Math.max(...db.novels.map(n => n.id)) + 1 : 1);
+
+            const novelData = { id: newId, title, cover, synopsis, genres };
+
+            if (editingNovelId) {
+                const index = db.novels.findIndex(n => n.id === editingNovelId);
+                db.novels[index] = novelData;
+                showNotification("Matéria atualizada!");
+            } else {
+                db.novels.push(novelData);
+                showNotification("Matéria criada!");
+            }
+            saveToLocal();
+            closePostModal();
+            editingNovelId ? showNovelDetails(editingNovelId) : showHome();
+        }
+
+        function handleNewChapter(e) {
+            e.preventDefault();
+            const novelId = parseInt(document.getElementById('chapter-novel-select').value);
+            const title = document.getElementById('chapter-title').value;
+            const content = document.getElementById('chapter-content').innerHTML;
+
+            if (isNaN(novelId)) { showNotification("Selecione uma novel.", true); return; }
+            if (content.trim() === '') { showNotification("Conteúdo vazio.", true); return; }
+
+            const newId = editingChapterId ? editingChapterId : (db.chapters.length > 0 ? Math.max(...db.chapters.map(c => c.id)) + 1 : 1);
+            const chapterData = { id: newId, novelId, title, content };
+
+            if (editingChapterId) {
+                const index = db.chapters.findIndex(c => c.id === editingChapterId);
+                db.chapters[index] = chapterData;
+                showNotification("Capítulo atualizado!");
+            } else {
+                db.chapters.push(chapterData);
+                showNotification("Capítulo publicado!");
+            }
+
+            // Atualizar as Questões no DB
+            // Removemos as questões antigas deste capítulo
+            db.questions = db.questions.filter(q => q.chapterId !== newId);
+            
+            // Adicionamos as novas/editadas
+            currentChapterQuestions.forEach((q, idx) => {
+                db.questions.push({
+                    id: q.id || (Date.now() + idx), // Preserva ID se existir, ou gera novo
+                    chapterId: newId,
+                    type: q.type,
+                    question: q.question,
+                    answer: q.answer,
+                    options: q.options,
+                    comment: q.comment || ''
+                });
+            });
+
+            saveToLocal();
+            closePostModal();
+            showNovelDetails(novelId);
+        }
+
+        function showNotification(message, isError = false) {
+            const notif = document.createElement('div');
+            notif.className = `fixed bottom-4 right-4 px-6 py-3 rounded shadow-lg text-white font-medium z-[100] transition-opacity duration-300 opacity-0 ${isError ? 'bg-red-600' : 'bg-green-600'}`;
+            notif.innerHTML = `<div class="flex items-center space-x-2"><i class="fas ${isError ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i><span>${message}</span></div>`;
+            document.body.appendChild(notif);
+            setTimeout(() => notif.classList.remove('opacity-0'), 10);
+            setTimeout(() => {
+                notif.classList.add('opacity-0');
+                setTimeout(() => notif.remove(), 300);
+            }, 3000);
+        }
+
+        function showStats() {
+            currentView = 'stats';
+            practiceSessionSeconds = 0;
+            setActiveNav('stats');
+            
+            // Calculos Gerais
+            const totalResponses = db.quizResponses.length;
+            const correctResponses = db.quizResponses.filter(r => r.isCorrect).length;
+            const wrongResponses = totalResponses - correctResponses;
+            const correctRate = totalResponses > 0 ? ((correctResponses / totalResponses) * 100).toFixed(1) : 0;
+            const wrongRate = totalResponses > 0 ? (100 - correctRate).toFixed(1) : 0;
+
+            // Stats por Novel
+            let novelStats = {};
+            db.novels.forEach(n => novelStats[n.id] = { name: n.title, total: 0, correct: 0 });
+            db.quizResponses.forEach(r => {
+                if(novelStats[r.novelId]) {
+                    novelStats[r.novelId].total++;
+                    if(r.isCorrect) novelStats[r.novelId].correct++;
+                }
+            });
+
+            // Stats por Capítulo
+            let chapterStats = {};
+            db.chapters.forEach(c => chapterStats[c.id] = { 
+                novelName: db.novels.find(n=>n.id === c.novelId)?.title || '?', 
+                chapterName: c.title, 
+                total: 0, correct: 0 
+            });
+            db.quizResponses.forEach(r => {
+                if(chapterStats[r.chapterId]) {
+                    chapterStats[r.chapterId].total++;
+                    if(r.isCorrect) chapterStats[r.chapterId].correct++;
+                }
+            });
+
+            // Stats por Questão
+            let questionStats = {};
+            db.questions.forEach(q => questionStats[q.id] = { text: q.question, total: 0, correct: 0 });
+            db.quizResponses.forEach(r => {
+                if(questionStats[r.questionId]) {
+                    questionStats[r.questionId].total++;
+                    if(r.isCorrect) questionStats[r.questionId].correct++;
+                }
+            });
+
+            // Dados de Retenção
+            const stats = db.userStats || {};
+            const totalHours = stats.totalActiveTime ? (stats.totalActiveTime / 3600).toFixed(1) : "0.0";
+            const avgDaily = stats.totalDaysVisited > 0 ? formatTime(Math.floor((stats.totalActiveTime || 0) / stats.totalDaysVisited)) : '0m';
+
+            let html = `
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-white mb-2 border-l-4 border-blue-500 pl-3">Painel Administrativo - Estatísticas</h2>
+                    <p class="text-slate-400">Acompanhe seu desempenho de estudo, retenção de tempo e questões.</p>
+                </div>
+
+                <!-- SEÇÃO DE RETENÇÃO E TEMPO -->
+                <h3 class="text-xl font-bold text-white mb-4 flex items-center"><i class="fas fa-clock text-orange-400 mr-2"></i> Tempo de Estudo e Check-ins</h3>
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+                    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow flex flex-col items-center justify-center">
+                        <i class="fas fa-calendar-check text-blue-400 text-2xl mb-1"></i>
+                        <span class="text-2xl font-bold text-white">${stats.totalDaysVisited || 0}</span>
+                        <span class="text-xs text-slate-400 text-center">Dias Visitados</span>
+                    </div>
+                    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow flex flex-col items-center justify-center relative overflow-hidden">
+                        ${stats.goalReachedToday ? '<div class="absolute top-0 w-full h-1 bg-orange-500"></div>' : ''}
+                        <i class="fas fa-fire ${stats.goalReachedToday ? 'text-orange-500' : 'text-slate-500'} text-2xl mb-1"></i>
+                        <span class="text-2xl font-bold ${stats.goalReachedToday ? 'text-orange-400' : 'text-white'}">${stats.currentStreak || 0}</span>
+                        <span class="text-xs text-slate-400 text-center">Streak Atual</span>
+                    </div>
+                    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow flex flex-col items-center justify-center">
+                        <i class="fas fa-trophy text-yellow-400 text-2xl mb-1"></i>
+                        <span class="text-2xl font-bold text-white">${stats.highestStreak || 0}</span>
+                        <span class="text-xs text-slate-400 text-center">Maior Streak</span>
+                    </div>
+                    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow flex flex-col items-center justify-center">
+                        <i class="fas fa-stopwatch text-green-400 text-2xl mb-1"></i>
+                        <span class="text-2xl font-bold text-white">${totalHours}h</span>
+                        <span class="text-xs text-slate-400 text-center">Horas Totais</span>
+                    </div>
+                    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow flex flex-col items-center justify-center">
+                        <i class="fas fa-chart-line text-purple-400 text-2xl mb-1"></i>
+                        <span class="text-2xl font-bold text-white">${avgDaily}</span>
+                        <span class="text-xs text-slate-400 text-center">Média/Dia</span>
+                    </div>
+                </div>
+
+                <!-- TEMPO POR TURNO E MÊS -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                    <button type="button" onclick="renderHistoricalTimeDetails('turn')" class="text-left bg-slate-800 p-5 rounded-xl border border-slate-700 shadow hover:border-emerald-500/60 transition-all">
+                        <div class="flex items-center justify-between"><div><div class="text-xs uppercase tracking-wide text-slate-500">Tempo Turno</div><div class="text-2xl font-bold text-emerald-400 mt-1">${formatTime(getCurrentTurnTime())}</div><div class="text-xs text-slate-500 mt-1">Ciclo atual de 10 dias · clique para histórico</div></div><i class="fas fa-calendar-days text-emerald-400 text-2xl"></i></div>
+                    </button>
+                    <button type="button" onclick="renderHistoricalTimeDetails('month')" class="text-left bg-slate-800 p-5 rounded-xl border border-slate-700 shadow hover:border-purple-500/60 transition-all">
+                        <div class="flex items-center justify-between"><div><div class="text-xs uppercase tracking-wide text-slate-500">Tempo Mês</div><div class="text-2xl font-bold text-purple-400 mt-1">${formatTime(getCurrentMonthTime())}</div><div class="text-xs text-slate-500 mt-1">Mês atual · clique para histórico</div></div><i class="fas fa-calendar text-purple-400 text-2xl"></i></div>
+                    </button>
+                </div>
+                <div id="historical-time-details"></div>
+
+                <!-- TEMPO POR MATÉRIA -->
+                <div class="mb-8">
+                    <div class="flex items-center justify-between gap-3 mb-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-white flex items-center">
+                                <i class="fas fa-book text-blue-400 mr-2"></i> Tempo por Matéria
+                            </h3>
+                            <p class="text-xs text-slate-400 mt-1">Clique em uma matéria para ver o tempo investido em cada capítulo.</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        ${db.novels.length ? db.novels.map(n => `
+                            <button type="button"
+                                onclick="toggleNovelTimeDetails(${n.id})"
+                                class="text-left bg-slate-800 p-5 rounded-xl border border-slate-700 shadow hover:border-blue-500/60 hover:bg-slate-750 transition-all group">
+                                <div class="flex items-center justify-between gap-3">
+                                    <div class="min-w-0">
+                                        <div class="font-bold text-white truncate" title="${n.title}">${n.title}</div>
+                                        <div class="text-xs text-slate-500 mt-1">${db.chapters.filter(c => c.novelId === n.id).length} capítulo(s)</div>
+                                    </div>
+                                    <div class="text-right shrink-0">
+                                        <div class="text-xl font-bold text-blue-300">${formatTime(getNovelTime(n.id))}</div>
+                                        <div class="text-[10px] uppercase tracking-wide text-slate-500">tempo total</div>
+                                    </div>
+                                </div>
+                                <div class="mt-3 text-xs text-slate-400 group-hover:text-blue-300 transition-colors">
+                                    <i class="fas fa-chevron-down mr-1"></i> Ver tempo por capítulo
+                                </div>
+                            </button>
+                        `).join('') : `
+                            <div class="col-span-full text-center py-8 text-slate-500 bg-slate-800 rounded-xl border border-slate-700">
+                                Nenhuma matéria cadastrada.
+                            </div>
+                        `}
+                    </div>
+                    <div id="novel-time-details" class="mt-4"></div>
+                </div>
+
+                <hr class="border-slate-700 my-8">
+
+                <!-- SEÇÃO DE QUIZZES -->
+                <h3 class="text-xl font-bold text-white mb-4 flex items-center"><i class="fas fa-brain text-purple-400 mr-2"></i> Desempenho em Questões</h3>
+                
+                <!-- Visão Geral -->
+                <div class="mb-6">
+                    <div class="inline-flex items-center gap-2 bg-purple-900/20 border border-purple-800/50 rounded-lg px-4 py-2 text-sm">
+                        <i class="fas fa-brain text-purple-400"></i>
+                        <span class="text-slate-400">Tempo total em Prática:</span>
+                        <strong class="text-purple-300">${formatTime(db.userStats?.practiceTime || 0)}</strong>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                    <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow flex flex-col items-center justify-center">
+                        <i class="fas fa-list-ol text-blue-400 text-3xl mb-2"></i>
+                        <span class="text-3xl font-bold text-white">${totalResponses}</span>
+                        <span class="text-sm text-slate-400">Respostas Totais</span>
+                    </div>
+                    <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow flex flex-col items-center justify-center">
+                        <i class="fas fa-check-circle text-green-400 text-3xl mb-2"></i>
+                        <span class="text-3xl font-bold text-white">${correctResponses}</span>
+                        <span class="text-sm text-slate-400">Acertos</span>
+                    </div>
+                    <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow flex flex-col items-center justify-center">
+                        <i class="fas fa-times-circle text-red-400 text-3xl mb-2"></i>
+                        <span class="text-3xl font-bold text-white">${wrongResponses}</span>
+                        <span class="text-sm text-slate-400">Erros</span>
+                    </div>
+                    <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow flex flex-col items-center justify-center">
+                        <i class="fas fa-chart-line text-purple-400 text-3xl mb-2"></i>
+                        <span class="text-3xl font-bold text-white">${correctRate}%</span>
+                        <span class="text-sm text-slate-400">Taxa de Acerto</span>
+                    </div>
+                </div>
+
+                <!-- Gráficos -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow">
+                        <h3 class="text-lg font-bold text-white mb-4">Acertos vs Erros Geral</h3>
+                        <div class="h-64 flex justify-center"><canvas id="chartGeral"></canvas></div>
+                    </div>
+                    <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow">
+                        <h3 class="text-lg font-bold text-white mb-4">Taxa de Acerto por Matéria (%)</h3>
+                        <div class="h-64"><canvas id="chartNovels"></canvas></div>
+                    </div>
+                </div>
+
+                <!-- Tabelas Detalhadas -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Tabela Capítulos -->
+                    <div class="bg-slate-800 rounded-xl border border-slate-700 shadow overflow-hidden flex flex-col max-h-96">
+                        <div class="p-4 border-b border-slate-700 bg-slate-900/50">
+                            <h3 class="text-lg font-bold text-white">Desempenho por Capítulo</h3>
+                        </div>
+                        <div class="overflow-y-auto custom-scrollbar flex-grow p-4">
+                            <table class="w-full text-left text-sm text-slate-300">
+                                <thead class="text-xs text-slate-400 uppercase bg-slate-700/50">
+                                    <tr>
+                                        <th class="px-4 py-2">Capítulo</th>
+                                        <th class="px-4 py-2 text-center">Respostas</th>
+                                        <th class="px-4 py-2 text-center">Acertos</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+            `;
+            
+            Object.values(chapterStats).filter(s => s.total > 0).forEach(s => {
+                let p = ((s.correct / s.total) * 100).toFixed(0);
+                html += `
+                    <tr class="border-b border-slate-700 hover:bg-slate-700/30">
+                        <td class="px-4 py-3"><div class="font-medium text-white line-clamp-1">${s.chapterName}</div><div class="text-xs text-slate-500">${s.novelName}</div></td>
+                        <td class="px-4 py-3 text-center">${s.total}</td>
+                        <td class="px-4 py-3 text-center text-${p >= 50 ? 'green' : 'red'}-400 font-bold">${p}%</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Tabela Questões (Mais fáceis/difíceis) -->
+                    <div class="bg-slate-800 rounded-xl border border-slate-700 shadow overflow-hidden flex flex-col max-h-96">
+                        <div class="p-4 border-b border-slate-700 bg-slate-900/50">
+                            <h3 class="text-lg font-bold text-white">Análise por Questão</h3>
+                        </div>
+                        <div class="overflow-y-auto custom-scrollbar flex-grow p-4">
+                            <table class="w-full text-left text-sm text-slate-300">
+                                <thead class="text-xs text-slate-400 uppercase bg-slate-700/50">
+                                    <tr>
+                                        <th class="px-4 py-2">Questão</th>
+                                        <th class="px-4 py-2 text-center">Acertos (%)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+            `;
+
+            let qArr = Object.values(questionStats).filter(s => s.total > 0).map(s => {
+                return { ...s, rate: (s.correct / s.total) * 100 };
+            }).sort((a,b) => a.rate - b.rate); // Mais dificeis primeiro
+
+            qArr.forEach(q => {
+                html += `
+                    <tr class="border-b border-slate-700 hover:bg-slate-700/30">
+                        <td class="px-4 py-3 line-clamp-2" title="${q.text}">${q.text}</td>
+                        <td class="px-4 py-3 text-center">
+                            <span class="px-2 py-1 rounded text-xs font-bold ${q.rate < 40 ? 'bg-red-900 text-red-300' : (q.rate > 80 ? 'bg-green-900 text-green-300' : 'bg-yellow-900 text-yellow-300')}">${q.rate.toFixed(0)}%</span>
+                            <div class="text-[10px] text-slate-500 mt-1">${q.total} resp.</div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            appContent.innerHTML = html;
+            window.scrollTo(0,0);
+            renderCharts(correctResponses, wrongResponses, novelStats);
+        }
+
+        function renderHistoricalTimeDetails(type){
+            const container=document.getElementById('historical-time-details'); if(!container) return;
+            ensureTimeHistory();
+            let rows=[];
+            if(type==='month'){
+                const keys=new Set(Object.keys(db.userStats.dailyTimeHistory));
+                keys.add(localDateKey());
+                const byMonth={};
+                [...keys].sort().forEach(key=>{const d=dateFromKey(key);const monthKey=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;byMonth[monthKey]=(byMonth[monthKey]||0)+(key===localDateKey()?Number(db.userStats.todayActiveTime)||0:Number(db.userStats.dailyTimeHistory[key])||0);});
+                rows=Object.entries(byMonth).sort((a,b)=>b[0].localeCompare(a[0])).map(([k,v])=>{const [y,m]=k.split('-');return {label:`${m}/${y}`,time:v};});
+            } else {
+                const anchor=localDateKey(new Date(db.userStats.turnStartDate||db.userStats.firstAccess||new Date()));
+                const keys=new Set(Object.keys(db.userStats.dailyTimeHistory)); keys.add(localDateKey());
+                const turns={};
+                [...keys].sort().forEach(key=>{const day=Math.max(0,diffDays(anchor,key));const n=Math.floor(day/10);const start=dateFromKey(anchor);start.setDate(start.getDate()+n*10);const sk=localDateKey(start);const ek=getTurnEndKey(sk);const val=key===localDateKey()?Number(db.userStats.todayActiveTime)||0:Number(db.userStats.dailyTimeHistory[key])||0;turns[sk]=(turns[sk]||0)+val;});
+                rows=Object.entries(turns).sort((a,b)=>b[0].localeCompare(a[0])).map(([k,v])=>({label:`${formatDateKey(k)} a ${formatDateKey(getTurnEndKey(k))}`,time:v}));
+            }
+            container.innerHTML=`<div class="bg-slate-900/70 rounded-xl border border-slate-700 p-4 mt-4"><div class="flex justify-between items-center mb-3"><h4 class="font-bold text-white">Histórico — ${type==='month'?'Meses':'Turnos de 10 dias'}</h4><button onclick="document.getElementById('historical-time-details').innerHTML=''" class="text-slate-500 hover:text-white"><i class="fas fa-times"></i></button></div><div class="max-h-64 overflow-y-auto space-y-2">${rows.length?rows.map(r=>`<div class="flex justify-between items-center bg-slate-800 border border-slate-700 rounded-lg px-4 py-3"><span class="text-sm text-slate-300">${r.label}</span><strong class="text-emerald-400">${formatTime(r.time)}</strong></div>`).join(''):'<div class="text-sm text-slate-500 text-center py-4">Ainda não há histórico suficiente.</div>'}</div></div>`;
+        }
+
+        function toggleNovelTimeDetails(novelId) {
+            const container = document.getElementById('novel-time-details');
+            if (!container) return;
+
+            const novel = db.novels.find(n => n.id === novelId);
+            if (!novel) return;
+
+            const chapters = db.chapters.filter(c => c.novelId === novelId);
+            const total = getNovelTime(novelId);
+
+            container.innerHTML = `
+                <div class="bg-slate-900/70 rounded-xl border border-blue-900/50 p-5 shadow-inner">
+                    <div class="flex items-center justify-between gap-3 mb-4">
+                        <div>
+                            <h4 class="font-bold text-white">${novel.title}</h4>
+                            <p class="text-xs text-slate-400 mt-1">Tempo total da matéria: <span class="text-blue-300 font-semibold">${formatTime(total)}</span></p>
+                        </div>
+                        <button type="button" onclick="document.getElementById('novel-time-details').innerHTML=''"
+                            class="text-slate-500 hover:text-white" title="Fechar detalhes">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="space-y-2">
+                        ${chapters.length ? chapters.map(c => `
+                            <div class="flex items-center justify-between gap-3 bg-slate-800/80 border border-slate-700 rounded-lg px-4 py-3">
+                                <span class="text-sm text-slate-200 truncate" title="${c.title}">${c.title}</span>
+                                <span class="shrink-0 text-sm font-semibold text-blue-300">
+                                    <i class="fas fa-clock mr-1 text-xs"></i>${formatTime(getChapterTime(c.id))}
+                                </span>
+                            </div>
+                        `).join('') : `
+                            <div class="text-sm text-slate-500 text-center py-4">Nenhum capítulo cadastrado nesta matéria.</div>
+                        `}
+                    </div>
+                </div>`;
+        }
+
+        function renderCharts(correct, wrong, novelStats) {
+            // Limpa instancias anteriores para evitar bugs no canvas
+            if(myChartInstance1) myChartInstance1.destroy();
+            if(myChartInstance2) myChartInstance2.destroy();
+
+            // Chart 1: Doughnut
+            const ctx1 = document.getElementById('chartGeral').getContext('2d');
+            myChartInstance1 = new Chart(ctx1, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Acertos', 'Erros'],
+                    datasets: [{
+                        data: [correct, wrong],
+                        backgroundColor: ['#4ade80', '#f87171'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { color: '#cbd5e1' } } }
+                }
+            });
+
+            // Chart 2: Bar
+            const labels = [];
+            const dataRates = [];
+            Object.values(novelStats).filter(s => s.total > 0).forEach(s => {
+                labels.push(s.name.length > 15 ? s.name.substring(0,15)+'...' : s.name);
+                dataRates.push(((s.correct/s.total)*100).toFixed(1));
+            });
+
+            const ctx2 = document.getElementById('chartNovels').getContext('2d');
+            myChartInstance2 = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: labels.length > 0 ? labels : ['Nenhum dado'],
+                    datasets: [{
+                        label: '% de Acerto',
+                        data: dataRates.length > 0 ? dataRates : [0],
+                        backgroundColor: '#60a5fa',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, max: 100, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
+                        x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function showQuizzes() {
+            currentView = 'practice';
+            practiceSessionSeconds = 0;
+            setActiveNav('quizzes');
+            activeNovelId = null;
+            activeChapterId = null;
+
+            let html = `
+                <div class="mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+                    <div>
+                        <h2 class="text-3xl font-bold text-white mb-2 border-l-4 border-purple-500 pl-3">Central de Prática</h2>
+                        <p class="text-slate-400">Filtre, ordene e resolva suas questões focando onde você mais precisa.</p>
+                    </div>
+                    <div class="bg-purple-900/30 border border-purple-700/60 rounded-xl px-5 py-3 min-w-[170px] text-center shadow">
+                        <div class="text-[10px] uppercase tracking-wider text-purple-300 font-bold">Tempo nesta prática</div>
+                        <div id="practice-time-counter" class="text-2xl font-mono font-bold text-white mt-1">00:00</div>
+                    </div>
+                </div>
+
+                <!-- Painel de Filtros -->
+                <div class="bg-slate-800 p-4 md:p-6 rounded-xl border border-slate-700 shadow-lg mb-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <div class="practice-filter-drawer">
+                            <button type="button" onclick="togglePracticeFilterDrawer('filter-novel-drawer')"><span><i class="fas fa-book mr-2 text-purple-400"></i>Novel (Múltipla escolha)</span><i class="fas fa-chevron-down drawer-chevron text-slate-500"></i></button>
+                            <div id="filter-novel-drawer" class="drawer-body hidden"><div id="filter-novel-container" class="w-full h-28 text-white text-sm overflow-y-auto custom-scrollbar space-y-1"></div></div>
+                        </div>
+                        <div class="practice-filter-drawer">
+                            <button type="button" onclick="togglePracticeFilterDrawer('filter-chapter-drawer')"><span><i class="fas fa-book-open mr-2 text-blue-400"></i>Capítulo (Múltipla escolha)</span><i class="fas fa-chevron-down drawer-chevron text-slate-500"></i></button>
+                            <div id="filter-chapter-drawer" class="drawer-body hidden"><div id="filter-chapter-container" class="w-full h-28 text-white text-sm overflow-y-auto custom-scrollbar space-y-1"></div></div>
+                        </div>
+                        <div class="practice-filter-drawer">
+                            <button type="button" onclick="togglePracticeFilterDrawer('filter-genre-drawer')"><span><i class="fas fa-tags mr-2 text-emerald-400"></i>Gênero (Múltipla escolha)</span><i class="fas fa-chevron-down drawer-chevron text-slate-500"></i></button>
+                            <div id="filter-genre-drawer" class="drawer-body hidden"><div id="filter-genre-container" class="w-full h-28 text-white text-sm overflow-y-auto custom-scrollbar space-y-1"></div></div>
+                        </div>
+                        <div class="practice-filter-drawer">
+                            <button type="button" onclick="togglePracticeFilterDrawer('filter-type-drawer')"><span><i class="fas fa-list-check mr-2 text-violet-400"></i>Tipo de Questão</span><i class="fas fa-chevron-down drawer-chevron text-slate-500"></i></button>
+                            <div id="filter-type-drawer" class="drawer-body hidden">
+                                <div class="filter-drawer-select-wrap">
+                                    <select id="filter-type" onchange="renderQuizList()" class="w-full bg-slate-900 border border-slate-600 rounded p-2 text-white text-sm focus:border-purple-500 outline-none practice-filter-control">
+                                        <option value="">Todos os Tipos</option>
+                                        <option value="tf">Certo / Errado</option>
+                                        <option value="mc">Múltipla Escolha</option>
+                                        <option value="flashcard">Flashcards</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="practice-filter-drawer">
+                            <button type="button" onclick="togglePracticeFilterDrawer('filter-sort-drawer')"><span><i class="fas fa-arrow-down-wide-short mr-2 text-amber-400"></i>Ordenar por</span><i class="fas fa-chevron-down drawer-chevron text-slate-500"></i></button>
+                            <div id="filter-sort-drawer" class="drawer-body hidden">
+                                <div class="filter-drawer-select-wrap">
+                                    <select id="filter-sort" onchange="renderQuizList()" class="w-full bg-slate-900 border border-slate-600 rounded p-2 text-white text-sm focus:border-purple-500 outline-none practice-filter-control">
+                                        <option value="default">Padrão</option>
+                                        <option value="worst">Mais Erradas (Foco)</option>
+                                        <option value="best">Mais Acertadas</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lista de Quizzes -->
+                <div id="quiz-list-container" class="space-y-6 max-w-3xl mx-auto">
+                    <!-- Questões renderizadas aqui dinamicamente -->
+                </div>
+            `;
+
+            appContent.innerHTML = html;
+            window.scrollTo(0,0);
+            
+            populateQuizFilters();
+            renderQuizList();
+        }
+
+        function getCheckedValues(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return [];
+            const checkboxes = container.querySelectorAll('input[type="checkbox"]:checked');
+            return Array.from(checkboxes).map(cb => cb.value);
+        }
+
+        function togglePracticeFilterDrawer(drawerId) {
+            const drawer = document.getElementById(drawerId);
+            if (!drawer) return;
+            const wrapper = drawer.closest('.practice-filter-drawer');
+            drawer.classList.toggle('hidden');
+            if (wrapper) wrapper.classList.toggle('open', !drawer.classList.contains('hidden'));
+        }
+
+        function populateQuizFilters() {
+            const novelContainer = document.getElementById('filter-novel-container');
+            const genreContainer = document.getElementById('filter-genre-container');
+            
+            novelContainer.innerHTML = '';
+            db.novels.forEach(n => {
+                novelContainer.innerHTML += `
+                    <label class="flex items-center space-x-2 cursor-pointer hover:bg-slate-800 p-1.5 rounded transition-colors">
+                        <input type="checkbox" value="${n.id}" onchange="updateChapterFilter()" class="w-4 h-4 accent-purple-500 cursor-pointer">
+                        <span class="truncate text-slate-300 select-none text-xs font-medium" title="${n.title}">${n.title}</span>
+                    </label>
+                `;
+            });
+
+            let allGenres = new Set();
+            db.novels.forEach(n => n.genres.forEach(g => allGenres.add(g.trim())));
+            genreContainer.innerHTML = '';
+            Array.from(allGenres).sort().forEach(g => {
+                genreContainer.innerHTML += `
+                    <label class="flex items-center space-x-2 cursor-pointer hover:bg-slate-800 p-1.5 rounded transition-colors">
+                        <input type="checkbox" value="${g}" onchange="renderQuizList()" class="w-4 h-4 accent-purple-500 cursor-pointer">
+                        <span class="truncate text-slate-300 select-none text-xs font-medium" title="${g}">${g}</span>
+                    </label>
+                `;
+            });
+            
+            updateChapterFilter(true);
+        }
+
+        function updateChapterFilter(isInitial = false) {
+            const selectedNovelIds = getCheckedValues('filter-novel-container');
+            const chapterContainer = document.getElementById('filter-chapter-container');
+            
+            const currentlyCheckedChapters = getCheckedValues('filter-chapter-container');
+            
+            chapterContainer.innerHTML = '';
+            
+            let chapters = db.chapters;
+            if (selectedNovelIds.length > 0) {
+                chapters = db.chapters.filter(c => selectedNovelIds.includes(c.novelId.toString()));
+            }
+            
+            if (chapters.length === 0) {
+                chapterContainer.innerHTML = '<div class="text-slate-500 text-xs text-center py-2">Nenhum capítulo disponível</div>';
+            } else {
+                chapters.forEach(c => {
+                    const novel = db.novels.find(n => n.id === c.novelId);
+                    const prefix = selectedNovelIds.length !== 1 && novel ? `<span class="text-slate-500 mr-1 text-[10px] uppercase font-bold">[${novel.title.substring(0,8)}...]</span> ` : '';
+                    const isChecked = currentlyCheckedChapters.includes(c.id.toString()) ? 'checked' : '';
+                    
+                    chapterContainer.innerHTML += `
+                        <label class="flex items-start space-x-2 cursor-pointer hover:bg-slate-800 p-1.5 rounded transition-colors">
+                            <input type="checkbox" value="${c.id}" onchange="renderQuizList()" ${isChecked} class="w-4 h-4 accent-purple-500 cursor-pointer mt-0.5 min-w-[1rem]">
+                            <span class="text-slate-300 select-none text-xs font-medium leading-tight" title="${c.title}">${prefix}${c.title}</span>
+                        </label>
+                    `;
+                });
+            }
+            
+            if (!isInitial) {
+                renderQuizList();
+            }
+        }
+
+        function navigatePracticeQuiz(delta) {
+            if (!practiceQuizState.order.length) return;
+            practiceQuizState.index = Math.max(0, Math.min(practiceQuizState.order.length - 1, practiceQuizState.index + delta));
+            renderPracticeQuizPosition();
+        }
+
+        function toggleShufflePracticeQuiz() {
+            const state = practiceQuizState;
+            if (!state.order.length) return;
+            state.shuffled = !state.shuffled;
+            state.order = [...state.baseOrder];
+            if (state.shuffled) {
+                for (let i = state.order.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [state.order[i], state.order[j]] = [state.order[j], state.order[i]]; }
+            }
+            state.index = 0;
+            renderPracticeQuizPosition();
+        }
+
+        function shufflePracticeQuiz() { toggleShufflePracticeQuiz(); }
+
+        function renderPracticeQuizPosition() {
+            const container = document.getElementById('quiz-list-container');
+            if (!container) return;
+            const cards = Array.from(container.querySelectorAll('.practice-quiz-question'));
+            cards.forEach(card => card.style.display = 'none');
+            const id = practiceQuizState.order[practiceQuizState.index];
+            const active = container.querySelector(`[data-question-id=\"${id}\"]`);
+            if (active) active.style.display = 'block';
+            const progress = document.getElementById('practice-quiz-progress');
+            if (progress) progress.textContent = `${practiceQuizState.index + 1} / ${practiceQuizState.order.length}`;
+            updateShuffleButtonState('shuffle-practice-quiz', practiceQuizState.shuffled);
+        }
+
+        function updateShuffleButtonState(buttonId, active) {
+            const button = document.getElementById(buttonId);
+            if (!button) return;
+            button.classList.toggle('bg-purple-600', active);
+            button.classList.toggle('hover:bg-purple-500', active);
+            button.classList.toggle('border-purple-500', active);
+            button.classList.toggle('bg-slate-700', !active);
+            button.classList.toggle('hover:bg-slate-600', !active);
+            button.classList.toggle('border-slate-600', !active);
+            const span = button.querySelector('span');
+            if (span) span.textContent = active ? 'Ordem aleatória: ATIVA' : 'Ordem aleatória';
+        }
+
+        function renderQuizList() {
+            const container = document.getElementById('quiz-list-container');
+            if (!container) return;
+
+            const selectedNovelIds = getCheckedValues('filter-novel-container');
+            const selectedChapterIds = getCheckedValues('filter-chapter-container');
+            const selectedGenres = getCheckedValues('filter-genre-container');
+            const type = document.getElementById('filter-type').value;
+            const sort = document.getElementById('filter-sort').value;
+
+            // 1. Filtragem
+            let filteredQuestions = db.questions.filter(q => {
+                const chapter = db.chapters.find(c => c.id === q.chapterId);
+                const novel = chapter ? db.novels.find(n => n.id === chapter.novelId) : null;
+                if (!novel || !chapter) return false;
+
+                if (selectedNovelIds.length > 0 && !selectedNovelIds.includes(novel.id.toString())) return false;
+                if (selectedChapterIds.length > 0 && !selectedChapterIds.includes(q.chapterId.toString())) return false;
+                if (selectedGenres.length > 0) {
+                    const novelGenres = novel.genres.map(g=>g.trim());
+                    const hasCommonGenre = selectedGenres.some(g => novelGenres.includes(g));
+                    if (!hasCommonGenre) return false;
+                }
+                if (type && q.type !== type) return false;
+                return true;
+            });
+
+            // 2. Análise de Estatísticas para Ordenação
+            filteredQuestions = filteredQuestions.map(q => {
+                const responses = db.quizResponses.filter(r => r.questionId === q.id);
+                const total = responses.length;
+                const correct = responses.filter(r => r.isCorrect).length;
+                const rate = total > 0 ? (correct / total) : -1; // -1 significa que nunca foi respondida
+                return { ...q, statTotal: total, statRate: rate };
+            });
+
+            // 3. Ordenação
+            if (sort === 'worst') {
+                filteredQuestions.sort((a, b) => {
+                    if (a.statTotal === 0 && b.statTotal === 0) return 0;
+                    if (a.statTotal === 0) return 1; // Coloca não respondidas no final
+                    if (b.statTotal === 0) return -1;
+                    return a.statRate - b.statRate; // Menor taxa de acerto primeiro
+                });
+            } else if (sort === 'best') {
+                filteredQuestions.sort((a, b) => b.statRate - a.statRate); // Maior taxa primeiro
+            }
+
+            // 4. Renderização HTML
+            if (filteredQuestions.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 bg-slate-800/50 rounded-xl border border-slate-700">
+                        <i class="fas fa-search text-4xl text-slate-600 mb-4"></i>
+                        <h3 class="text-xl text-slate-300 font-medium">Nenhum quiz encontrado</h3>
+                        <p class="text-slate-500 mt-2">Tente ajustar seus filtros para ver mais resultados.</p>
+                    </div>`;
+                return;
+            }
+
+            practiceQuizState = { index: 0, order: filteredQuestions.map(q => q.id), ids: filteredQuestions.map(q => q.id), baseOrder: filteredQuestions.map(q => q.id), shuffled: false };
+            let html = `
+                <div class="flex items-center justify-between gap-3 bg-slate-900/70 border border-slate-700 rounded-xl p-3 mb-6">
+                    <button type="button" id="shuffle-practice-quiz" onclick="toggleShufflePracticeQuiz()" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-lg text-sm border border-slate-600 transition-colors"><i class="fas fa-random mr-2"></i><span>Ordem aleatória</span></button>
+                    <span id="practice-quiz-progress" class="text-sm text-slate-400 font-medium">1 / ${filteredQuestions.length}</span>
+                    <div class="flex gap-2"><button type="button" onclick="navigatePracticeQuiz(-1)" class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-lg border border-slate-600"><i class="fas fa-chevron-left"></i></button><button type="button" onclick="navigatePracticeQuiz(1)" class="bg-purple-600 hover:bg-purple-500 text-white px-3 py-2 rounded-lg border border-purple-500"><i class="fas fa-chevron-right"></i></button></div>
+                </div>`;
+            filteredQuestions.forEach((q, index) => {
+                const chapter = db.chapters.find(c => c.id === q.chapterId);
+                const novel = db.novels.find(n => n.id === chapter.novelId);
+                
+                // Formatação da badge de status (taxa de acerto)
+                let statusBadge = '';
+                if (q.statTotal > 0) {
+                    const perc = Math.round(q.statRate * 100);
+                    let colorClass = perc >= 70 ? 'bg-green-900/80 text-green-300 border-green-700' : 
+                                     perc <= 40 ? 'bg-red-900/80 text-red-300 border-red-700' : 
+                                     'bg-yellow-900/80 text-yellow-300 border-yellow-700';
+                    statusBadge = `<span class="text-xs px-2 py-0.5 rounded border ${colorClass}" title="${perc}% de acerto em ${q.statTotal} respostas">Acerto: ${perc}%</span>`;
+                } else {
+                    statusBadge = `<span class="text-xs px-2 py-0.5 rounded border bg-slate-700 text-slate-400 border-slate-600">Nova</span>`;
+                }
+
+                html += `
+                    <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg relative practice-quiz-question" id="question-card-${q.id}" data-question-id="${q.id}" style="display:${index === 0 ? 'block' : 'none'}">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="text-xs text-purple-400 font-medium bg-purple-900/30 px-2 py-1 rounded inline-flex items-center">
+                                <i class="fas fa-book-reader mr-2"></i> ${novel.title} <span class="mx-2 text-slate-500">&bull;</span> ${chapter.title}
+                            </div>
+                            ${statusBadge}
+                        </div>
+                        <h4 class="text-xl font-medium text-white mb-4 mt-2"><span class="text-blue-400 font-bold mr-2">Q.</span> ${q.question}</h4>
+                `;
+                
+                // Reutilizando lógica de botões de respostas baseada no tipo
+                if (q.type === 'tf') {
+                    html += `
+                        <div class="flex space-x-4 mt-4">
+                            <button onclick="submitAnswer(${q.id}, 'T', this)" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-medium py-3 rounded-lg border border-slate-600 transition-colors">Certo</button>
+                            <button onclick="submitAnswer(${q.id}, 'F', this)" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-medium py-3 rounded-lg border border-slate-600 transition-colors">Errado</button>
+                        </div>
+                    `;
+                } else if (q.type === 'mc') {
+                    html += `<div class="space-y-3 mt-4">`;
+                    ['A', 'B', 'C', 'D', 'E'].forEach(opt => {
+                        if(q.options[opt]) {
+                            html += `
+                                <button onclick="submitAnswer(${q.id}, '${opt}', this)" class="w-full text-left bg-slate-700 hover:bg-slate-600 text-white font-medium py-3 px-4 rounded-lg border border-slate-600 transition-colors flex items-center">
+                                    <span class="bg-slate-900 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm border border-slate-500">${opt}</span>
+                                    ${q.options[opt]}
+                                </button>
+                            `;
+                        }
+                    });
+                    html += `</div>`;
+                } else if (q.type === 'flashcard') {
+                    html += `
+                        <div class="flashcard cursor-pointer w-full" onclick="flipCard(this, ${q.id})">
+                            <div class="flashcard-inner bg-slate-700 rounded-xl shadow-inner border border-slate-600">
+                                <div class="flashcard-front">
+                                    <i class="fas fa-undo-alt text-slate-400 mb-3 text-2xl"></i>
+                                    <p class="text-slate-300 font-medium">Clique para revelar a resposta</p>
+                                </div>
+                                <div class="flashcard-back bg-blue-900/40">
+                                    <p class="text-white font-medium text-lg mb-6">${q.answer}</p>
+                                    <div class="flex space-x-4 w-full px-6" onclick="event.stopPropagation()">
+                                        <button onclick="submitFlashcardAnswer(${q.id}, true, this)" class="flex-1 bg-green-600 hover:bg-green-500 text-white py-2 rounded shadow transition-colors"><i class="fas fa-check mr-2"></i>Acertei</button>
+                                        <button onclick="submitFlashcardAnswer(${q.id}, false, this)" class="flex-1 bg-red-600 hover:bg-red-500 text-white py-2 rounded shadow transition-colors"><i class="fas fa-times mr-2"></i>Errei</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                html += `<div id="feedback-${q.id}" class="mt-4 hidden p-3 rounded font-medium text-center transition-all"></div>`;
+                html += `</div>`;
+            });
+
+            container.innerHTML = html;
+        }
+
+
+        // Inicialização
+        window.onload = () => {
+            loadSavedData();
+            showHome();
+        };
+
+        document.getElementById('post-modal').addEventListener('click', function(e) {
+            if (e.target === this) closePostModal();
+        });
+    </script>
+</body>
+</html>
+
             color: #f8fafc; /* text-slate-50 */
             background-position: center;
             background-size: cover;
@@ -2311,19 +5006,19 @@
                 <div class="bg-slate-800 p-4 md:p-6 rounded-xl border border-slate-700 shadow-lg mb-8">
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                         <div>
-                            <label class="block text-xs font-medium text-slate-400 mb-1">Novel (Múltipla escolha)</label>
+                            <label class="block text-xs font-medium text-slate-400 mb-1">Matéria</label>
                             <div id="filter-novel-container" class="w-full h-28 bg-slate-900 border border-slate-600 rounded p-2 text-white text-sm overflow-y-auto custom-scrollbar space-y-1">
                                 <!-- Checkboxes renderizados via JS -->
                             </div>
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-slate-400 mb-1">Capítulo (Múltipla escolha)</label>
+                            <label class="block text-xs font-medium text-slate-400 mb-1">Capítulo</label>
                             <div id="filter-chapter-container" class="w-full h-28 bg-slate-900 border border-slate-600 rounded p-2 text-white text-sm overflow-y-auto custom-scrollbar space-y-1">
                                 <!-- Checkboxes renderizados via JS -->
                             </div>
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-slate-400 mb-1">Gênero (Múltipla escolha)</label>
+                            <label class="block text-xs font-medium text-slate-400 mb-1">Gênero</label>
                             <div id="filter-genre-container" class="w-full h-28 bg-slate-900 border border-slate-600 rounded p-2 text-white text-sm overflow-y-auto custom-scrollbar space-y-1">
                                 <!-- Checkboxes renderizados via JS -->
                             </div>
