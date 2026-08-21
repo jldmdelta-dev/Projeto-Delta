@@ -2387,15 +2387,15 @@
                 <div class="bg-slate-800 p-4 md:p-6 rounded-xl border border-slate-700 shadow-lg mb-8">
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                         <div class="practice-filter-drawer">
-                            <button type="button" onclick="togglePracticeFilterDrawer('filter-novel-drawer')"><span><i class="fas fa-book mr-2 text-purple-400"></i>Novel (Múltipla escolha)</span><i class="fas fa-chevron-down drawer-chevron text-slate-500"></i></button>
+                            <button type="button" onclick="togglePracticeFilterDrawer('filter-novel-drawer')"><span><i class="fas fa-book mr-2 text-purple-400"></i>Matéria</span><i class="fas fa-chevron-down drawer-chevron text-slate-500"></i></button>
                             <div id="filter-novel-drawer" class="drawer-body hidden"><div id="filter-novel-container" class="w-full h-28 text-white text-sm overflow-y-auto custom-scrollbar space-y-1"></div></div>
                         </div>
                         <div class="practice-filter-drawer">
-                            <button type="button" onclick="togglePracticeFilterDrawer('filter-chapter-drawer')"><span><i class="fas fa-book-open mr-2 text-blue-400"></i>Capítulo (Múltipla escolha)</span><i class="fas fa-chevron-down drawer-chevron text-slate-500"></i></button>
+                            <button type="button" onclick="togglePracticeFilterDrawer('filter-chapter-drawer')"><span><i class="fas fa-book-open mr-2 text-blue-400"></i>Capítulo</span><i class="fas fa-chevron-down drawer-chevron text-slate-500"></i></button>
                             <div id="filter-chapter-drawer" class="drawer-body hidden"><div id="filter-chapter-container" class="w-full h-28 text-white text-sm overflow-y-auto custom-scrollbar space-y-1"></div></div>
                         </div>
                         <div class="practice-filter-drawer">
-                            <button type="button" onclick="togglePracticeFilterDrawer('filter-genre-drawer')"><span><i class="fas fa-tags mr-2 text-emerald-400"></i>Gênero (Múltipla escolha)</span><i class="fas fa-chevron-down drawer-chevron text-slate-500"></i></button>
+                            <button type="button" onclick="togglePracticeFilterDrawer('filter-genre-drawer')"><span><i class="fas fa-tags mr-2 text-emerald-400"></i>Gênero</span><i class="fas fa-chevron-down drawer-chevron text-slate-500"></i></button>
                             <div id="filter-genre-drawer" class="drawer-body hidden"><div id="filter-genre-container" class="w-full h-28 text-white text-sm overflow-y-auto custom-scrollbar space-y-1"></div></div>
                         </div>
                         <div class="practice-filter-drawer">
@@ -2561,7 +2561,7 @@
             button.classList.toggle('hover:bg-slate-600', !active);
             button.classList.toggle('border-slate-600', !active);
             const span = button.querySelector('span');
-            if (span) span.textContent = active ? 'Ordem aleatória: ATIVA' : 'Ordem aleatória';
+            if (span) span.textContent = active ? 'Ordem aleatória: On' : 'Ordem aleatória';
         }
 
         function renderQuizList() {
