@@ -617,7 +617,7 @@
         const BACKUP_VERSION = 2;
         const STORAGE_KEY = "minhasNovelsData";
 
-        function defaultSettings(){ return {backgroundColor:"#0f172a",backgroundImage:"",backgroundImageEnabled:false,streakGoalMinutes:30,homeOrder:[],cycleReadNovelId:null,lastReadAtByNovel:{}}; }
+        function defaultSettings(){ return {backgroundColor:"#0f172a",backgroundImage:"",backgroundImageEnabled:false,streakGoalMinutes:30,homeOrder:[],homeHiddenNovelIds:[],cycleReadNovelId:null,lastReadAtByNovel:{}}; }
         function loadSavedData(){
             try{
                 const saved=localStorage.getItem(STORAGE_KEY);
@@ -638,7 +638,7 @@
         }
         function normalizeDatabase(data){
             const u={totalDaysVisited:0,firstAccess:null,lastDateActive:null,currentStreak:0,highestStreak:0,totalActiveTime:0,todayActiveTime:0,goalReachedToday:false,timeByNovel:{},timeByChapter:{},dailyTimeHistory:{},turnStartDate:null,practiceTime:0};
-            return {novels:Array.isArray(data?.novels)?data.novels:[],chapters:Array.isArray(data?.chapters)?data.chapters:[],questions:Array.isArray(data?.questions)?data.questions.map(q=>({...q,comment:q.comment||""})):[],quizResponses:Array.isArray(data?.quizResponses)?data.quizResponses:[],userStats:{...u,...(data?.userStats||{}),practiceTime:(data?.userStats?.practiceTime||0),timeByNovel:{...(data?.userStats?.timeByNovel||{})},timeByChapter:{...(data?.userStats?.timeByChapter||{})},dailyTimeHistory:{...(data?.userStats?.dailyTimeHistory||{})},turnStartDate:data?.userStats?.turnStartDate||data?.userStats?.firstAccess||null},settings:{...defaultSettings(),...(data?.settings||{}),streakGoalMinutes:Math.max(1,Number(data?.settings?.streakGoalMinutes)||30),homeOrder:Array.isArray(data?.settings?.homeOrder)?data.settings.homeOrder:[],cycleReadNovelId:data?.settings?.cycleReadNovelId ?? null,lastReadAtByNovel:{...(data?.settings?.lastReadAtByNovel||{})}}};
+            return {novels:Array.isArray(data?.novels)?data.novels:[],chapters:Array.isArray(data?.chapters)?data.chapters:[],questions:Array.isArray(data?.questions)?data.questions.map(q=>({...q,comment:q.comment||""})):[],quizResponses:Array.isArray(data?.quizResponses)?data.quizResponses:[],userStats:{...u,...(data?.userStats||{}),practiceTime:(data?.userStats?.practiceTime||0),timeByNovel:{...(data?.userStats?.timeByNovel||{})},timeByChapter:{...(data?.userStats?.timeByChapter||{})},dailyTimeHistory:{...(data?.userStats?.dailyTimeHistory||{})},turnStartDate:data?.userStats?.turnStartDate||data?.userStats?.firstAccess||null},settings:{...defaultSettings(),...(data?.settings||{}),streakGoalMinutes:Math.max(1,Number(data?.settings?.streakGoalMinutes)||30),homeOrder:Array.isArray(data?.settings?.homeOrder)?data.settings.homeOrder:[],homeHiddenNovelIds:Array.isArray(data?.settings?.homeHiddenNovelIds)?data.settings.homeHiddenNovelIds.map(Number).filter(Number.isFinite):[],cycleReadNovelId:data?.settings?.cycleReadNovelId ?? null,lastReadAtByNovel:{...(data?.settings?.lastReadAtByNovel||{})}}};
         }
         function stableSerialize(v){ if(v===null||typeof v!=="object") return JSON.stringify(v); if(Array.isArray(v)) return "["+v.map(stableSerialize).join(",")+"]"; return "{"+Object.keys(v).sort().map(k=>JSON.stringify(k)+":"+stableSerialize(v[k])).join(",")+"}"; }
         function simpleChecksum(t){let h=2166136261;for(let i=0;i<t.length;i++){h^=t.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0).toString(16).padStart(8,"0");}
@@ -950,6 +950,12 @@
                 if (byId.has(n.id)) ordered.push(n);
             });
 
+            // Matérias ocultadas permanecem na Biblioteca, mas não aparecem no Início fora do modo de organização.
+            const hiddenIds = new Set((db.settings?.homeHiddenNovelIds || []).map(Number));
+            if (!window.homeOrganizeMode) {
+                return ordered.filter(n => !hiddenIds.has(Number(n.id)));
+            }
+
             // Matéria marcada como concluída no ciclo atual vai para o final.
             const cycleId = db.settings?.cycleReadNovelId;
             if (cycleId != null) {
@@ -1011,6 +1017,22 @@
             saveToLocal();
             showHome();
             showNotification("Matéria concluída e movida para o final.");
+        }
+
+        function toggleHomeNovelVisibility(novelId) {
+            const settings = ensureSettings();
+            if (!Array.isArray(settings.homeHiddenNovelIds)) settings.homeHiddenNovelIds = [];
+            const id = Number(novelId);
+            const index = settings.homeHiddenNovelIds.indexOf(id);
+            if (index >= 0) {
+                settings.homeHiddenNovelIds.splice(index, 1);
+                showNotification("Matéria reativada no Início.");
+            } else {
+                settings.homeHiddenNovelIds.push(id);
+                showNotification("Matéria ocultada do Início. Ela continua disponível na Biblioteca.");
+            }
+            saveToLocal();
+            showHome();
         }
 
         function setupHomeDragAndDrop() {
@@ -1107,13 +1129,15 @@
                         ? `<span class="absolute top-2 left-2 bg-emerald-600/95 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow flex items-center gap-1"><i class="fas fa-check"></i> Lida ${formatReadDate(lastReadAt)}</span>`
                         : '';
                     const isRead = !!lastReadAt;
+                    const isHomeHidden = (db.settings?.homeHiddenNovelIds || []).map(Number).includes(Number(novel.id));
+                    const homeVisibilityButton = organizing ? `<button type="button" onclick="event.stopPropagation(); toggleHomeNovelVisibility(${novel.id})" title="${isHomeHidden ? 'Reativar no Início' : 'Ocultar do Início'}" class="absolute top-2 right-2 z-20 w-8 h-8 rounded-full ${isHomeHidden ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-red-600 hover:bg-red-500'} text-white shadow-lg flex items-center justify-center border-2 border-slate-900"><i class="fas ${isHomeHidden ? 'fa-check' : 'fa-times'}"></i></button>` : '';
 
                     html += `
-                        <div data-home-novel-id="${novel.id}" draggable="${organizing}"
-                            class="novel-card bg-slate-800 rounded-lg overflow-hidden shadow-lg ${organizing ? 'cursor-grab' : 'cursor-pointer'} flex flex-col h-full border ${isRead ? 'border-emerald-600/60' : 'border-slate-700'}"
+                        <div data-home-novel-id="${novel.id}" draggable="${organizing}" class="novel-card relative ${organizing && isHomeHidden ? 'opacity-45 grayscale' : ''} bg-slate-800 rounded-lg overflow-hidden shadow-lg ${organizing ? 'cursor-grab' : 'cursor-pointer'} flex flex-col h-full border ${isRead ? 'border-emerald-600/60' : 'border-slate-700'}"
                             ${organizing ? '' : `onclick="showNovelDetails(${novel.id})"`}>
                             <div class="relative pb-[140%]">
                                 <img src="${getCoverUrl(novel.cover)}" alt="${novel.title}" class="absolute top-0 left-0 w-full h-full object-cover" onerror="this.src='https://placehold.co/300x450/1e293b/f8fafc?text=Sem+Capa'">
+                                ${homeVisibilityButton}
                                 <div class="absolute top-2 right-2 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded shadow">${chapterCount} Cap.</div>
                                 ${cycleBadge}
                                 ${organizing ? `<div class="absolute inset-0 bg-slate-950/20 flex items-center justify-center pointer-events-none"><span class="bg-slate-900/85 text-white px-3 py-2 rounded-lg text-sm shadow"><i class="fas fa-arrows-alt mr-2"></i> Arraste</span></div>` : ''}
@@ -2363,15 +2387,15 @@
                 <div class="bg-slate-800 p-4 md:p-6 rounded-xl border border-slate-700 shadow-lg mb-8">
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                         <div class="practice-filter-drawer">
-                            <button type="button" onclick="togglePracticeFilterDrawer('filter-novel-drawer')"><span><i class="fas fa-book mr-2 text-purple-400"></i>Matéria</span><i class="fas fa-chevron-down drawer-chevron text-slate-500"></i></button>
+                            <button type="button" onclick="togglePracticeFilterDrawer('filter-novel-drawer')"><span><i class="fas fa-book mr-2 text-purple-400"></i>Novel (Múltipla escolha)</span><i class="fas fa-chevron-down drawer-chevron text-slate-500"></i></button>
                             <div id="filter-novel-drawer" class="drawer-body hidden"><div id="filter-novel-container" class="w-full h-28 text-white text-sm overflow-y-auto custom-scrollbar space-y-1"></div></div>
                         </div>
                         <div class="practice-filter-drawer">
-                            <button type="button" onclick="togglePracticeFilterDrawer('filter-chapter-drawer')"><span><i class="fas fa-book-open mr-2 text-blue-400"></i>Capítulo</span><i class="fas fa-chevron-down drawer-chevron text-slate-500"></i></button>
+                            <button type="button" onclick="togglePracticeFilterDrawer('filter-chapter-drawer')"><span><i class="fas fa-book-open mr-2 text-blue-400"></i>Capítulo (Múltipla escolha)</span><i class="fas fa-chevron-down drawer-chevron text-slate-500"></i></button>
                             <div id="filter-chapter-drawer" class="drawer-body hidden"><div id="filter-chapter-container" class="w-full h-28 text-white text-sm overflow-y-auto custom-scrollbar space-y-1"></div></div>
                         </div>
                         <div class="practice-filter-drawer">
-                            <button type="button" onclick="togglePracticeFilterDrawer('filter-genre-drawer')"><span><i class="fas fa-tags mr-2 text-emerald-400"></i>Gênero</span><i class="fas fa-chevron-down drawer-chevron text-slate-500"></i></button>
+                            <button type="button" onclick="togglePracticeFilterDrawer('filter-genre-drawer')"><span><i class="fas fa-tags mr-2 text-emerald-400"></i>Gênero (Múltipla escolha)</span><i class="fas fa-chevron-down drawer-chevron text-slate-500"></i></button>
                             <div id="filter-genre-drawer" class="drawer-body hidden"><div id="filter-genre-container" class="w-full h-28 text-white text-sm overflow-y-auto custom-scrollbar space-y-1"></div></div>
                         </div>
                         <div class="practice-filter-drawer">
@@ -2537,7 +2561,7 @@
             button.classList.toggle('hover:bg-slate-600', !active);
             button.classList.toggle('border-slate-600', !active);
             const span = button.querySelector('span');
-            if (span) span.textContent = active ? 'Ordem aleatória: On' : 'Ordem aleatória';
+            if (span) span.textContent = active ? 'Ordem aleatória: ATIVA' : 'Ordem aleatória';
         }
 
         function renderQuizList() {
