@@ -332,6 +332,8 @@
                             <div class="flex justify-between text-slate-300"><span>Dias Visitados:</span> <strong class="text-white" id="tt-days-visited">0</strong></div>
                             <div class="flex justify-between text-slate-300 border-t border-slate-700 pt-2 mt-2"><span>Tempo Hoje:</span> <strong class="text-blue-400" id="tt-time-today">0m</strong></div>
                             <div class="flex justify-between text-slate-300"><span>Tempo Total:</span> <strong class="text-white" id="tt-time-total">0h 0m</strong></div>
+                            <div class="flex justify-between text-slate-300"><span>Tempo Turno:</span> <strong class="text-emerald-400" id="tt-time-turn">0h 0m</strong></div>
+                            <div class="flex justify-between text-slate-300"><span>Tempo Mês:</span> <strong class="text-purple-400" id="tt-time-month">0h 0m</strong></div>
                         </div>
                     </div>
                 </div>
@@ -386,8 +388,17 @@
                 <div><label class="block text-sm font-medium text-slate-300 mb-2">Imagem de fundo</label><div class="border-2 border-dashed border-slate-600 rounded-lg p-4 text-center"><input type="file" id="settings-bg-image" accept="image/*" class="hidden" onchange="handleBackgroundImage(event)"><label for="settings-bg-image" class="inline-flex items-center bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-md cursor-pointer"><i class="fas fa-image mr-2"></i>Escolher imagem</label><p id="settings-bg-image-name" class="text-xs text-slate-500 mt-2">Nenhuma imagem selecionada</p></div></div>
                 <div class="flex items-center justify-between bg-slate-900/70 rounded-lg p-3 border border-slate-700"><div><p class="text-sm font-medium text-white">Usar imagem como fundo</p><p class="text-xs text-slate-500">A imagem será incluída no backup.</p></div><input type="checkbox" id="settings-bg-image-enabled" class="w-5 h-5" onchange="applySavedBackgroundSettings()"></div>
                 <div class="flex gap-2"><button onclick="clearBackgroundImage()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-md">Remover imagem</button><button onclick="saveSettings()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-md font-medium">Salvar</button></div>
+                 <div class="border-t border-red-900/50 pt-4"><button onclick="openResetStatsConfirm()" class="w-full bg-red-900/30 hover:bg-red-900/50 border border-red-700/60 text-red-300 px-4 py-2 rounded-md font-medium"><i class="fas fa-trash-alt mr-2"></i>Resetar todas as estatísticas</button><p class="text-xs text-slate-500 mt-2">Zera tempos, respostas, streaks e históricos. As matérias e capítulos permanecem.</p></div>
                 <p class="text-xs text-slate-500 border-t border-slate-700 pt-3">O backup inclui matéria, capítulos, questões, comentários, respostas, tempos de leitura, sequências, estatísticas e configurações.</p>
             </div>
+        </div>
+    </div>
+
+    <div id="reset-stats-modal" class="fixed inset-0 modal-bg hidden z-[80] flex items-center justify-center p-4">
+        <div class="bg-slate-800 rounded-xl shadow-2xl w-full max-w-md border border-red-800/60">
+            <div class="p-5 border-b border-slate-700 flex items-center justify-between"><h3 class="text-lg font-bold text-white"><i class="fas fa-triangle-exclamation text-red-400 mr-2"></i>Resetar estatísticas?</h3><button onclick="closeResetStatsConfirm()" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button></div>
+            <div class="p-5"><p class="text-slate-300 text-sm leading-relaxed">Esta ação apagará permanentemente <strong class="text-white">horas de estudo, respostas, streaks e históricos</strong>. As matérias e capítulos não serão removidos.</p><p class="text-red-300 text-xs mt-3">O primeiro dia do próximo turno de 10 dias será hoje.</p></div>
+            <div class="p-5 pt-0 flex gap-3"><button onclick="closeResetStatsConfirm()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-md">Cancelar</button><button onclick="resetAllStatistics()" class="flex-1 bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-md font-bold">Sim, resetar</button></div>
         </div>
     </div>
 
@@ -454,7 +465,12 @@
                             <input type="text" id="chapter-title" required class="w-full bg-slate-900 border border-slate-600 rounded-md p-2 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-1">Conteúdo do Capítulo</label>
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="block text-sm font-medium text-slate-300">Conteúdo do Capítulo</label>
+                                <button type="button" id="toggle-chapter-content-btn" onclick="toggleChapterContentEditor()" class="text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-1.5 rounded-md border border-slate-600 transition-colors flex items-center gap-2" title="Ocultar conteúdo do capítulo">
+                                    <i class="fas fa-chevron-up"></i><span>Ocultar conteúdo</span>
+                                </button>
+                            </div>
                             <div id="editor-container" class="w-full bg-slate-900 border border-slate-600 rounded-md flex flex-col">
                                 <!-- Barra de ferramentas -->
                                 <div class="editor-toolbar bg-slate-800 p-2 border-b border-slate-600 flex flex-wrap gap-2 items-center rounded-t-md">
@@ -578,7 +594,9 @@
                 todayActiveTime: 0,
                 goalReachedToday: false,
                 timeByNovel: {},
-                timeByChapter: {}
+                timeByChapter: {},
+                dailyTimeHistory: {},
+                turnStartDate: null
             },
             settings: { backgroundColor: "#0f172a", backgroundImage: "", backgroundImageEnabled: false, streakGoalMinutes: 30, homeOrder: [], cycleReadNovelId: null, lastReadAtByNovel: {} }
         };
@@ -612,8 +630,8 @@
             updateStreakUI();
         }
         function normalizeDatabase(data){
-            const u={totalDaysVisited:0,firstAccess:null,lastDateActive:null,currentStreak:0,highestStreak:0,totalActiveTime:0,todayActiveTime:0,goalReachedToday:false,timeByNovel:{},timeByChapter:{},practiceTime:0};
-            return {novels:Array.isArray(data?.novels)?data.novels:[],chapters:Array.isArray(data?.chapters)?data.chapters:[],questions:Array.isArray(data?.questions)?data.questions.map(q=>({...q,comment:q.comment||""})):[],quizResponses:Array.isArray(data?.quizResponses)?data.quizResponses:[],userStats:{...u,...(data?.userStats||{}),practiceTime:(data?.userStats?.practiceTime||0),timeByNovel:{...(data?.userStats?.timeByNovel||{})},timeByChapter:{...(data?.userStats?.timeByChapter||{})}},settings:{...defaultSettings(),...(data?.settings||{}),streakGoalMinutes:Math.max(1,Number(data?.settings?.streakGoalMinutes)||30),homeOrder:Array.isArray(data?.settings?.homeOrder)?data.settings.homeOrder:[],cycleReadNovelId:data?.settings?.cycleReadNovelId ?? null,lastReadAtByNovel:{...(data?.settings?.lastReadAtByNovel||{})}}};
+            const u={totalDaysVisited:0,firstAccess:null,lastDateActive:null,currentStreak:0,highestStreak:0,totalActiveTime:0,todayActiveTime:0,goalReachedToday:false,timeByNovel:{},timeByChapter:{},dailyTimeHistory:{},turnStartDate:null,practiceTime:0};
+            return {novels:Array.isArray(data?.novels)?data.novels:[],chapters:Array.isArray(data?.chapters)?data.chapters:[],questions:Array.isArray(data?.questions)?data.questions.map(q=>({...q,comment:q.comment||""})):[],quizResponses:Array.isArray(data?.quizResponses)?data.quizResponses:[],userStats:{...u,...(data?.userStats||{}),practiceTime:(data?.userStats?.practiceTime||0),timeByNovel:{...(data?.userStats?.timeByNovel||{})},timeByChapter:{...(data?.userStats?.timeByChapter||{})},dailyTimeHistory:{...(data?.userStats?.dailyTimeHistory||{})},turnStartDate:data?.userStats?.turnStartDate||data?.userStats?.firstAccess||null},settings:{...defaultSettings(),...(data?.settings||{}),streakGoalMinutes:Math.max(1,Number(data?.settings?.streakGoalMinutes)||30),homeOrder:Array.isArray(data?.settings?.homeOrder)?data.settings.homeOrder:[],cycleReadNovelId:data?.settings?.cycleReadNovelId ?? null,lastReadAtByNovel:{...(data?.settings?.lastReadAtByNovel||{})}}};
         }
         function stableSerialize(v){ if(v===null||typeof v!=="object") return JSON.stringify(v); if(Array.isArray(v)) return "["+v.map(stableSerialize).join(",")+"]"; return "{"+Object.keys(v).sort().map(k=>JSON.stringify(k)+":"+stableSerialize(v[k])).join(",")+"}"; }
         function simpleChecksum(t){let h=2166136261;for(let i=0;i<t.length;i++){h^=t.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0).toString(16).padStart(8,"0");}
@@ -681,6 +699,18 @@
         function applySavedBackgroundSettings(){const x=ensureSettings();document.body.style.backgroundColor=x.backgroundColor||"#0f172a";if(x.backgroundImage&&x.backgroundImageEnabled){document.body.style.backgroundImage=`linear-gradient(rgba(15,23,42,.35),rgba(15,23,42,.35)),url("${x.backgroundImage}")`;}else document.body.style.backgroundImage="none";}
         function handleBackgroundImage(e){const f=e.target.files[0];if(!f)return;if(!f.type.startsWith("image/")){showNotification("Selecione uma imagem válida.",true);return;}const r=new FileReader();r.onload=ev=>{ensureSettings().backgroundImage=ev.target.result;ensureSettings().backgroundImageEnabled=true;document.getElementById("settings-bg-image-enabled").checked=true;document.getElementById("settings-bg-image-name").textContent=f.name;applySavedBackgroundSettings();};r.readAsDataURL(f);}
         function clearBackgroundImage(){ensureSettings().backgroundImage="";ensureSettings().backgroundImageEnabled=false;document.getElementById("settings-bg-image-enabled").checked=false;document.getElementById("settings-bg-image-name").textContent="Nenhuma imagem selecionada";applySavedBackgroundSettings();}
+        function openResetStatsConfirm(){ document.getElementById('reset-stats-modal')?.classList.remove('hidden'); }
+        function closeResetStatsConfirm(){ document.getElementById('reset-stats-modal')?.classList.add('hidden'); }
+        function resetAllStatistics(){
+            const now=new Date(); const iso=now.toISOString(); const today=localDateKey(now);
+            db.userStats={totalDaysVisited:1,firstAccess:iso,lastDateActive:today,currentStreak:0,highestStreak:0,totalActiveTime:0,todayActiveTime:0,goalReachedToday:false,timeByNovel:{},timeByChapter:{},dailyTimeHistory:{},turnStartDate:iso,practiceTime:0};
+            const settings=ensureSettings(); settings.cycleReadNovelId=null; settings.lastReadAtByNovel={};
+            db.quizResponses=[];
+            saveToLocal(); checkDailyReset(); updateStreakUI(); closeResetStatsConfirm(); closeSettings();
+            showNotification('Estatísticas resetadas. O novo turno de 10 dias começa hoje.');
+            if(currentView==='stats') showStats();
+        }
+
         function saveSettings(){
             const settings=ensureSettings();
             const streakInput=document.getElementById("settings-streak-goal");
@@ -746,64 +776,87 @@
             return cover || 'https://placehold.co/300x450/1e293b/f8fafc?text=Sem+Capa';
         }
 
+        function localDateKey(date=new Date()) {
+            const y=date.getFullYear();
+            const m=String(date.getMonth()+1).padStart(2,'0');
+            const d=String(date.getDate()).padStart(2,'0');
+            return `${y}-${m}-${d}`;
+        }
+        function dateFromKey(key){ const [y,m,d]=String(key).split('-').map(Number); return new Date(y,m-1,d); }
+        function diffDays(a,b){ return Math.floor((dateFromKey(b)-dateFromKey(a))/86400000); }
+        function ensureTimeHistory(){
+            if(!db.userStats) db.userStats={};
+            if(!db.userStats.dailyTimeHistory) db.userStats.dailyTimeHistory={};
+            if(!db.userStats.turnStartDate) db.userStats.turnStartDate=db.userStats.firstAccess||new Date().toISOString();
+        }
+        function getTurnStartKey(dateKey=localDateKey()){
+            ensureTimeHistory();
+            const anchorKey=localDateKey(new Date(db.userStats.turnStartDate));
+            const days=Math.max(0,diffDays(anchorKey,dateKey));
+            const start=dateFromKey(anchorKey);
+            start.setDate(start.getDate()+Math.floor(days/10)*10);
+            return localDateKey(start);
+        }
+        function getTurnEndKey(startKey){ const d=dateFromKey(startKey); d.setDate(d.getDate()+9); return localDateKey(d); }
+        function getTimeForDateRange(startKey,endKey,includeToday=true){
+            ensureTimeHistory(); let total=0;
+            Object.entries(db.userStats.dailyTimeHistory).forEach(([key,val])=>{if(key>=startKey&&key<=endKey) total+=Number(val)||0;});
+            const today=localDateKey();
+            if(includeToday && today>=startKey && today<=endKey) total+=Number(db.userStats.todayActiveTime)||0;
+            return total;
+        }
+        function getCurrentTurnTime(){ const start=getTurnStartKey(); return getTimeForDateRange(start,getTurnEndKey(start),true); }
+        function getCurrentMonthTime(){ const now=new Date(); const start=localDateKey(new Date(now.getFullYear(),now.getMonth(),1)); const end=localDateKey(new Date(now.getFullYear(),now.getMonth()+1,0)); return getTimeForDateRange(start,end,true); }
+        function formatDateKey(key){ const [y,m,d]=key.split('-'); return `${d}/${m}/${y.slice(2)}`; }
         function checkDailyReset() {
-            const todayStr = new Date().toLocaleDateString('pt-BR');
-            if (!db.userStats) db.userStats = {}; 
-            
-            // Verificação de virada de dia
-            if (db.userStats.lastDateActive !== todayStr) {
-                if (db.userStats.lastDateActive) {
-                    const yesterday = new Date();
-                    yesterday.setDate(yesterday.getDate() - 1);
-                    const yesterdayStr = yesterday.toLocaleDateString('pt-BR');
-
-                    // Verifica quebra de Streak: se o último acesso foi ontem E bateu a meta, mantém. Senão zera.
-                    if (db.userStats.lastDateActive === yesterdayStr) {
-                        if (!db.userStats.goalReachedToday) db.userStats.currentStreak = 0;
-                    } else {
-                        db.userStats.currentStreak = 0;
-                    }
-                } else {
-                    db.userStats.firstAccess = new Date().toISOString();
-                }
-
+            const todayStr = localDateKey();
+            if (!db.userStats) db.userStats = {};
+            ensureTimeHistory();
+            if (!db.userStats.lastDateActive) {
+                db.userStats.firstAccess = db.userStats.firstAccess || new Date().toISOString();
+                db.userStats.turnStartDate = db.userStats.turnStartDate || db.userStats.firstAccess;
                 db.userStats.lastDateActive = todayStr;
-                db.userStats.todayActiveTime = 0;
-                db.userStats.goalReachedToday = false;
-                db.userStats.totalDaysVisited = (db.userStats.totalDaysVisited || 0) + 1;
-                
+                db.userStats.todayActiveTime = Number(db.userStats.todayActiveTime)||0;
+                saveToLocal();
+                return;
+            }
+            if (db.userStats.lastDateActive !== todayStr) {
+                const previousKey=db.userStats.lastDateActive;
+                db.userStats.dailyTimeHistory[previousKey]=(db.userStats.dailyTimeHistory[previousKey]||0)+(Number(db.userStats.todayActiveTime)||0);
+                if (db.userStats.lastDateActive) {
+                    const yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1);
+                    const yesterdayStr = localDateKey(yesterday);
+                    if (db.userStats.lastDateActive === yesterdayStr) {
+                        if (!db.userStats.goalReachedToday) db.userStats.currentStreak=0;
+                    } else db.userStats.currentStreak=0;
+                }
+                db.userStats.lastDateActive=todayStr;
+                db.userStats.todayActiveTime=0;
+                db.userStats.goalReachedToday=false;
+                db.userStats.totalDaysVisited=(db.userStats.totalDaysVisited||0)+1;
                 saveToLocal();
             }
         }
 
         function updateStreakUI() {
             if(!db.userStats) return;
-            const streakInd = document.getElementById('streak-indicator');
-            const streakIcon = document.getElementById('streak-icon');
-            const streakCount = document.getElementById('streak-count');
-            
-            if(!streakInd) return; // Evita falha inicial antes da montagem no mobile
-            
-            streakCount.innerText = db.userStats.currentStreak;
-            
-            if (db.userStats.goalReachedToday) {
-                streakIcon.classList.add('fire-active');
-                streakInd.classList.replace('text-slate-500', 'text-orange-400');
-                streakInd.classList.replace('border-slate-700', 'border-orange-500/50');
-            } else {
-                streakIcon.classList.remove('fire-active');
-                streakInd.classList.replace('text-orange-400', 'text-slate-500');
-                streakInd.classList.replace('border-orange-500/50', 'border-slate-700');
-            }
-
-            document.getElementById('tt-streak').innerText = `${db.userStats.currentStreak} dias`;
-            document.getElementById('tt-highest-streak').innerText = `${db.userStats.highestStreak || 0} dias`;
-            document.getElementById('tt-days-visited').innerText = db.userStats.totalDaysVisited;
-            document.getElementById('tt-time-today').innerText = formatTime(db.userStats.todayActiveTime);
-            document.getElementById('tt-time-total').innerText = formatTime(db.userStats.totalActiveTime);
-            const goalMinutes = Math.max(1, Number(ensureSettings().streakGoalMinutes) || 30);
-            const goalLabel = document.getElementById('tt-streak-goal');
-            if (goalLabel) goalLabel.innerText = `${goalMinutes} ${goalMinutes === 1 ? 'minuto' : 'minutos'}`;
+            const streakInd=document.getElementById('streak-indicator');
+            const streakIcon=document.getElementById('streak-icon');
+            const streakCount=document.getElementById('streak-count');
+            if(!streakInd) return;
+            streakCount.innerText=db.userStats.currentStreak||0;
+            if(db.userStats.goalReachedToday){ streakIcon.classList.add('fire-active'); streakInd.classList.replace('text-slate-500','text-orange-400'); streakInd.classList.replace('border-slate-700','border-orange-500/50'); }
+            else { streakIcon.classList.remove('fire-active'); streakInd.classList.replace('text-orange-400','text-slate-500'); streakInd.classList.replace('border-orange-500/50','border-slate-700'); }
+            const set=(id,val)=>{const el=document.getElementById(id);if(el)el.innerText=val;};
+            set('tt-streak',`${db.userStats.currentStreak||0} dias`);
+            set('tt-highest-streak',`${db.userStats.highestStreak||0} dias`);
+            set('tt-days-visited',db.userStats.totalDaysVisited||0);
+            set('tt-time-today',formatTime(db.userStats.todayActiveTime||0));
+            set('tt-time-total',formatTime(db.userStats.totalActiveTime||0));
+            set('tt-time-turn',formatTime(getCurrentTurnTime()));
+            set('tt-time-month',formatTime(getCurrentMonthTime()));
+            const goalMinutes=Math.max(1,Number(ensureSettings().streakGoalMinutes)||30);
+            const goalLabel=document.getElementById('tt-streak-goal'); if(goalLabel) goalLabel.innerText=`${goalMinutes} ${goalMinutes===1?'minuto':'minutos'}`;
         }
 
         // Heartbeat de tracking que roda a cada 1 segundo
@@ -1562,6 +1615,20 @@
             }
         }
 
+        function toggleChapterContentEditor() {
+            const editor = document.getElementById('editor-container');
+            const content = document.getElementById('chapter-content');
+            const button = document.getElementById('toggle-chapter-content-btn');
+            if (!editor || !content || !button) return;
+
+            const collapsed = content.classList.toggle('hidden');
+            editor.classList.toggle('border-b', !collapsed);
+            button.innerHTML = collapsed
+                ? '<i class="fas fa-chevron-down"></i><span>Exibir conteúdo</span>'
+                : '<i class="fas fa-chevron-up"></i><span>Ocultar conteúdo</span>';
+            button.title = collapsed ? 'Exibir conteúdo do capítulo' : 'Ocultar conteúdo do capítulo';
+        }
+
         function addQuizQuestion() {
             const newQ = {
                 tempId: Date.now() + Math.random(),
@@ -1931,6 +1998,17 @@
                     </div>
                 </div>
 
+                <!-- TEMPO POR TURNO E MÊS -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                    <button type="button" onclick="renderHistoricalTimeDetails('turn')" class="text-left bg-slate-800 p-5 rounded-xl border border-slate-700 shadow hover:border-emerald-500/60 transition-all">
+                        <div class="flex items-center justify-between"><div><div class="text-xs uppercase tracking-wide text-slate-500">Tempo Turno</div><div class="text-2xl font-bold text-emerald-400 mt-1">${formatTime(getCurrentTurnTime())}</div><div class="text-xs text-slate-500 mt-1">Ciclo atual de 10 dias · clique para histórico</div></div><i class="fas fa-calendar-days text-emerald-400 text-2xl"></i></div>
+                    </button>
+                    <button type="button" onclick="renderHistoricalTimeDetails('month')" class="text-left bg-slate-800 p-5 rounded-xl border border-slate-700 shadow hover:border-purple-500/60 transition-all">
+                        <div class="flex items-center justify-between"><div><div class="text-xs uppercase tracking-wide text-slate-500">Tempo Mês</div><div class="text-2xl font-bold text-purple-400 mt-1">${formatTime(getCurrentMonthTime())}</div><div class="text-xs text-slate-500 mt-1">Mês atual · clique para histórico</div></div><i class="fas fa-calendar text-purple-400 text-2xl"></i></div>
+                    </button>
+                </div>
+                <div id="historical-time-details"></div>
+
                 <!-- TEMPO POR MATÉRIA -->
                 <div class="mb-8">
                     <div class="flex items-center justify-between gap-3 mb-4">
@@ -2097,6 +2175,26 @@
             appContent.innerHTML = html;
             window.scrollTo(0,0);
             renderCharts(correctResponses, wrongResponses, novelStats);
+        }
+
+        function renderHistoricalTimeDetails(type){
+            const container=document.getElementById('historical-time-details'); if(!container) return;
+            ensureTimeHistory();
+            let rows=[];
+            if(type==='month'){
+                const keys=new Set(Object.keys(db.userStats.dailyTimeHistory));
+                keys.add(localDateKey());
+                const byMonth={};
+                [...keys].sort().forEach(key=>{const d=dateFromKey(key);const monthKey=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;byMonth[monthKey]=(byMonth[monthKey]||0)+(key===localDateKey()?Number(db.userStats.todayActiveTime)||0:Number(db.userStats.dailyTimeHistory[key])||0);});
+                rows=Object.entries(byMonth).sort((a,b)=>b[0].localeCompare(a[0])).map(([k,v])=>{const [y,m]=k.split('-');return {label:`${m}/${y}`,time:v};});
+            } else {
+                const anchor=localDateKey(new Date(db.userStats.turnStartDate||db.userStats.firstAccess||new Date()));
+                const keys=new Set(Object.keys(db.userStats.dailyTimeHistory)); keys.add(localDateKey());
+                const turns={};
+                [...keys].sort().forEach(key=>{const day=Math.max(0,diffDays(anchor,key));const n=Math.floor(day/10);const start=dateFromKey(anchor);start.setDate(start.getDate()+n*10);const sk=localDateKey(start);const ek=getTurnEndKey(sk);const val=key===localDateKey()?Number(db.userStats.todayActiveTime)||0:Number(db.userStats.dailyTimeHistory[key])||0;turns[sk]=(turns[sk]||0)+val;});
+                rows=Object.entries(turns).sort((a,b)=>b[0].localeCompare(a[0])).map(([k,v])=>({label:`${formatDateKey(k)} a ${formatDateKey(getTurnEndKey(k))}`,time:v}));
+            }
+            container.innerHTML=`<div class="bg-slate-900/70 rounded-xl border border-slate-700 p-4 mt-4"><div class="flex justify-between items-center mb-3"><h4 class="font-bold text-white">Histórico — ${type==='month'?'Meses':'Turnos de 10 dias'}</h4><button onclick="document.getElementById('historical-time-details').innerHTML=''" class="text-slate-500 hover:text-white"><i class="fas fa-times"></i></button></div><div class="max-h-64 overflow-y-auto space-y-2">${rows.length?rows.map(r=>`<div class="flex justify-between items-center bg-slate-800 border border-slate-700 rounded-lg px-4 py-3"><span class="text-sm text-slate-300">${r.label}</span><strong class="text-emerald-400">${formatTime(r.time)}</strong></div>`).join(''):'<div class="text-sm text-slate-500 text-center py-4">Ainda não há histórico suficiente.</div>'}</div></div>`;
         }
 
         function toggleNovelTimeDetails(novelId) {
